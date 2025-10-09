@@ -1,0 +1,29 @@
+# ignorar los archivos de dependencias
+node_modules/
+# ignorar los archivos de construcciÃ³n
+dist/
+build/
+*.exe
+*.msi
+*.dmg
+*.deb
+*.rpm
+*.zip
+*.tar.gz
+
+# ignorar los archivos de configuraciÃ³n local
+.env
+config.local.json
+
+# ignorar los archivos de registro
+*.log
+logs/
+
+# ignorar los archivos temporales
+tmp/
+temp/
+*.tmp
+*.temp
+# ignorar los archivos de base de datos
+*.db
+*.sqlite

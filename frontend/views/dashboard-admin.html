@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CCED Coin - Panel de Administración</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  </head>
+  <body class="bg-slate-100 text-slate-800">
+    <div class="flex h-screen overflow-hidden">
+      <!-- Sidebar -->
+      <aside
+        id="sidebar"
+        class="w-64 bg-slate-900 text-slate-100 flex flex-col fixed inset-y-0 left-0 z-30 lg:translate-x-0 transform -translate-x-full"
+      >
+        <div
+          class="flex items-center justify-between h-20 px-4 border-b border-slate-700"
+        >
+          <a href="#" class="flex items-center space-x-2">
+            <i data-lucide="graduation-cap" class="h-8 w-8 text-sky-500"></i>
+            <span id="sidebarLogoText" class="text-xl font-semibold"
+              >CCED Coin</span
+            >
+          </a>
+        </div>
+
+        <nav class="flex-1 py-6 space-y-1 overflow-y-auto sidebar-nav-items">
+          <a
+            href="#"
+            class="flex items-center space-x-3 py-3 px-4 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150 active-nav-item"
+          >
+            <i data-lucide="layout-dashboard" class="menu-item-icon"></i>
+            <span class="text-sm font-medium menu-text">Dashboard</span>
+          </a>
+          <a
+            href="#"
+            class="flex items-center space-x-3 py-3 px-4 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150"
+          >
+            <i data-lucide="users" class="menu-item-icon"></i>
+            <span class="text-sm font-medium menu-text">Estudiantes</span>
+          </a>
+          <a
+            href="#"
+            class="flex items-center space-x-3 py-3 px-4 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150"
+          >
+            <i data-lucide="clipboard-list" class="menu-item-icon"></i>
+            <span class="text-sm font-medium menu-text">Tareas</span>
+          </a>
+          <a
+            href="#"
+            class="flex items-center space-x-3 py-3 px-4 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150"
+          >
+            <i data-lucide="file-text" class="menu-item-icon"></i>
+            <span class="text-sm font-medium menu-text">Exámenes</span>
+          </a>
+          <a
+            href="#"
+            class="flex items-center space-x-3 py-3 px-4 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150"
+          >
+            <i data-lucide="coins" class="menu-item-icon"></i>
+            <span class="text-sm font-medium menu-text">Monedas</span>
+          </a>
+          <a
+            href="#"
+            class="flex items-center space-x-3 py-3 px-4 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150"
+          >
+            <i data-lucide="key" class="menu-item-icon"></i>
+            <span class="text-sm font-medium menu-text">Códigos Acceso</span>
+          </a>
+          <a
+            href="#"
+            class="flex items-center space-x-3 py-3 px-4 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150"
+          >
+            <i data-lucide="award" class="menu-item-icon"></i>
+            <span class="text-sm font-medium menu-text">Rankings</span>
+          </a>
+          <a
+            href="#"
+            class="flex items-center space-x-3 py-3 px-4 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150"
+          >
+            <i data-lucide="bar-chart-3" class="menu-item-icon"></i>
+            <span class="text-sm font-medium menu-text">Reportes</span>
+          </a>
+        </nav>
+
+        <div class="px-4 py-4 border-t border-slate-700">
+          <a
+            href="#"
+            class="flex items-center space-x-3 py-3 px-4 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150"
+          >
+            <i data-lucide="settings" class="menu-item-icon"></i>
+            <span class="text-sm font-medium menu-text">Configuración</span>
+          </a>
+          <button
+            id="sidebarToggle"
+            class="w-full flex items-center justify-center space-x-3 py-3 px-4 rounded-lg text-slate-400 hover:bg-slate-700 hover:text-sky-400 transition-colors duration-150 focus:outline-none hidden lg:flex"
+          >
+            <i
+              id="toggleIconOpen"
+              data-lucide="chevrons-left"
+              class="menu-item-icon"
+            ></i>
+            <i
+              id="toggleIconClosed"
+              data-lucide="chevrons-right"
+              class="menu-item-icon hidden"
+            ></i>
+            <span class="text-sm font-medium menu-text">Colapsar</span>
+          </button>
+        </div>
+      </aside>
+
+      <div
+        id="sidebarOverlay"
+        class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden"
+        aria-hidden="true"
+      ></div>
+
+      <!-- Contenido Principal -->
+      <div
+        id="mainContent"
+        class="flex-1 flex flex-col overflow-hidden lg:ml-64"
+      >
+        <!-- Header -->
+        <header
+          class="bg-white shadow-md h-20 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20"
+        >
+          <button
+            id="mobileMenuButton"
+            class="text-slate-600 hover:text-sky-500 lg:hidden"
+          >
+            <i data-lucide="menu" class="h-7 w-7"></i>
+          </button>
+
+          <div class="relative hidden sm:block">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+              <i data-lucide="search" class="h-5 w-5 text-slate-400"></i>
+            </span>
+            <input
+              type="text"
+              placeholder="Buscar estudiantes, tareas..."
+              class="w-full max-w-xs py-2.5 pl-10 pr-4 border border-slate-300 rounded-full text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all duration-150"
+            />
+          </div>
+
+          <div class="flex items-center space-x-3 sm:space-x-4">
+            <div
+              class="hidden sm:flex items-center space-x-1 text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full"
+            >
+              <i data-lucide="circle" class="h-2 w-2 fill-current"></i>
+              <span>Sistema Activo</span>
+            </div>
+            <button class="text-slate-500 hover:text-sky-500 relative">
+              <i data-lucide="bell" class="h-6 w-6"></i>
+              <span
+                class="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-white text-xs"
+              ></span>
+            </button>
+            <div class="relative">
+              <button
+                id="profileButton"
+                class="flex items-center space-x-2 focus:outline-none"
+              >
+                <img
+                  src="https://placehold.co/40x40/E2E8F0/475569?text=AD"
+                  alt="User Avatar"
+                  class="h-10 w-10 rounded-full border-2 border-transparent hover:border-sky-500 transition-colors"
+                />
+                <span
+                  class="hidden md:inline text-sm font-medium text-slate-700"
+                  >Prof. Admin</span
+                >
+                <i
+                  data-lucide="chevron-down"
+                  class="h-4 w-4 text-slate-400 hidden md:inline"
+                ></i>
+              </button>
+              <div
+                id="profileDropdown"
+                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 origin-top-right opacity-0 transform scale-95 -translate-y-2 pointer-events-none z-30"
+              >
+                <a
+                  href="#"
+                  class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-sky-600"
+                >
+                  <i data-lucide="user-circle" class="w-4 h-4 mr-2"></i>Mi
+                  Perfil
+                </a>
+                <a
+                  href="#"
+                  class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-sky-600"
+                >
+                  <i data-lucide="settings-2" class="w-4 h-4 mr-2"></i
+                  >Configuración
+                </a>
+                <hr class="my-1 border-slate-200" />
+                <a
+                  href="#"
+                  id="logoutButton"
+                  class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-red-50 hover:text-red-600"
+                >
+                  <i data-lucide="log-out" class="w-4 h-4 mr-2"></i>Cerrar
+                  Sesión
+                </a>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Contenido del Dashboard -->
+        <main
+          class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-100 p-4 sm:p-6"
+        >
+          <h1 class="text-2xl sm:text-3xl font-semibold text-slate-800 mb-6">
+            Panel de Administración
+          </h1>
+
+          <!-- Tarjetas de Estadísticas -->
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 sm:gap-6 mb-8"
+          >
+            <div
+              class="bg-white p-4 sm:p-6 rounded-xl shadow-lg flex items-center space-x-3 sm:space-x-4"
+            >
+              <div class="stat-card-icon-container bg-sky-100 text-sky-600">
+                <i data-lucide="users" class="stat-card-icon"></i>
+              </div>
+              <div>
+                <p class="text-xs sm:text-sm text-slate-500">
+                  Total Estudiantes
+                </p>
+                <p
+                  class="text-xl sm:text-2xl font-semibold text-slate-800"
+                  data-stat="total-students"
+                >
+                  0
+                </p>
+              </div>
+            </div>
+            <div
+              class="bg-white p-4 sm:p-6 rounded-xl shadow-lg flex items-center space-x-3 sm:space-x-4"
+            >
+              <div
+                class="stat-card-icon-container bg-emerald-100 text-emerald-600"
+              >
+                <i data-lucide="clipboard-check" class="stat-card-icon"></i>
+              </div>
+              <div>
+                <p class="text-xs sm:text-sm text-slate-500">
+                  Tareas Completadas
+                </p>
+                <p
+                  class="text-xl sm:text-2xl font-semibold text-slate-800"
+                  data-stat="completed-tasks"
+                >
+                  0
+                </p>
+              </div>
+            </div>
+            <div
+              class="bg-white p-4 sm:p-6 rounded-xl shadow-lg flex items-center space-x-3 sm:space-x-4"
+            >
+              <div class="stat-card-icon-container bg-amber-100 text-amber-600">
+                <i data-lucide="coins" class="stat-card-icon"></i>
+              </div>
+              <div>
+                <p class="text-xs sm:text-sm text-slate-500">
+                  CCED Coins Circulando
+                </p>
+                <p
+                  class="text-xl sm:text-2xl font-semibold text-slate-800"
+                  data-stat="total-coins"
+                >
+                  0
+                </p>
+              </div>
+            </div>
+            <div
+              class="bg-white p-4 sm:p-6 rounded-xl shadow-lg flex items-center space-x-3 sm:space-x-4"
+            >
+              <div
+                class="stat-card-icon-container bg-indigo-100 text-indigo-600"
+              >
+                <i data-lucide="file-text" class="stat-card-icon"></i>
+              </div>
+              <div>
+                <p class="text-xs sm:text-sm text-slate-500">
+                  Exámenes Activos
+                </p>
+                <p
+                  class="text-xl sm:text-2xl font-semibold text-slate-800"
+                  data-stat="active-exams"
+                >
+                  0
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Acciones Rápidas y Estudiantes Recientes -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div class="lg:col-span-1 bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+              <h3 class="text-lg sm:text-xl font-semibold text-slate-700 mb-4">
+                Acciones Rápidas
+              </h3>
+              <div class="space-y-3">
+                <button
+                  id="openNewStudentModal"
+                  class="w-full flex items-center justify-center text-sm bg-sky-500 hover:bg-sky-600 text-white font-medium py-2.5 px-4 rounded-lg transition-colors duration-150"
+                >
+                  <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i> Nuevo
+                  Estudiante
+                </button>
+                <button
+                  id="openNewTaskModal"
+                  class="w-full flex items-center justify-center text-sm bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-2.5 px-4 rounded-lg transition-colors duration-150"
+                >
+                  <i data-lucide="clipboard-plus" class="w-4 h-4 mr-2"></i>
+                  Crear Tarea
+                </button>
+                <button
+                  id="openNewExamModal"
+                  class="w-full flex items-center justify-center text-sm bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2.5 px-4 rounded-lg transition-colors duration-150"
+                >
+                  <i data-lucide="file-plus" class="w-4 h-4 mr-2"></i> Nuevo
+                  Examen
+                </button>
+                <button
+                  id="openGenerateCodeModal"
+                  class="w-full flex items-center justify-center text-sm bg-purple-500 hover:bg-purple-600 text-white font-medium py-2.5 px-4 rounded-lg transition-colors duration-150"
+                >
+                  <i data-lucide="key-round" class="w-4 h-4 mr-2"></i> Generar
+                  Código
+                </button>
+              </div>
+            </div>
+            <div class="lg:col-span-2 bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+              <h3 class="text-lg sm:text-xl font-semibold text-slate-700 mb-4">
+                Estudiantes Recientes
+              </h3>
+              <div class="overflow-x-auto">
+                <table
+                  id="recentStudentsTable"
+                  class="w-full text-sm text-left text-slate-500"
+                >
+                  <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+                    <!-- ... -->
+                  </thead>
+                  <tbody>
+                    <!-- Esto se llenará automáticamente con JavaScript -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gráficos y Actividad Reciente -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+              <h3 class="text-lg sm:text-xl font-semibold text-slate-700 mb-4">
+                Distribución de CCED Coins
+              </h3>
+              <div class="h-80 md:h-96">
+                <canvas id="coinsDistributionChart"></canvas>
+              </div>
+            </div>
+            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+              <h3 class="text-lg sm:text-xl font-semibold text-slate-700 mb-4">
+                Top Estudiantes
+              </h3>
+              <div class="h-80 md:h-96 flex items-center justify-center">
+                <canvas
+                  id="topStudentsChart"
+                  class="max-h-full max-w-full"
+                ></canvas>
+              </div>
+            </div>
+            <div class="lg:col-span-3 bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+              <h3 class="text-lg sm:text-xl font-semibold text-slate-700 mb-4">
+                Actividad Reciente
+              </h3>
+              <ul class="space-y-4 max-h-96 overflow-y-auto">
+                <li
+                  class="flex items-start space-x-3 p-3 rounded-lg hover:bg-slate-50"
+                >
+                  <div
+                    class="activity-icon-container bg-green-100 text-green-600"
+                  >
+                    <i data-lucide="check-circle-2" class="activity-icon"></i>
+                  </div>
+                  <div>
+                    <p class="text-sm text-slate-700">
+                      María González completó la tarea
+                      <span class="font-semibold text-sky-600"
+                        >"Álgebra Básica"</span
+                      >
+                      y ganó 25 CCED Coins
+                    </p>
+                    <p class="text-xs text-slate-400">Hace 2 minutos</p>
+                  </div>
+                </li>
+                <li
+                  class="flex items-start space-x-3 p-3 rounded-lg hover:bg-slate-50"
+                >
+                  <div
+                    class="activity-icon-container bg-blue-100 text-blue-600"
+                  >
+                    <i data-lucide="user-plus" class="activity-icon"></i>
+                  </div>
+                  <div>
+                    <p class="text-sm text-slate-700">
+                      Nuevo estudiante registrado:
+                      <span class="font-semibold">Laura Hernández</span>
+                    </p>
+                    <p class="text-xs text-slate-400">Hace 15 minutos</p>
+                  </div>
+                </li>
+                <li
+                  class="flex items-start space-x-3 p-3 rounded-lg hover:bg-slate-50"
+                >
+                  <div
+                    class="activity-icon-container bg-yellow-100 text-yellow-600"
+                  >
+                    <i data-lucide="coins" class="activity-icon"></i>
+                  </div>
+                  <div>
+                    <p class="text-sm text-slate-700">
+                      Carlos Rodríguez compró 2 puntos para el examen de
+                      Matemáticas por 20 CCED Coins
+                    </p>
+                    <p class="text-xs text-slate-400">Hace 1 hora</p>
+                  </div>
+                </li>
+                <li
+                  class="flex items-start space-x-3 p-3 rounded-lg hover:bg-slate-50"
+                >
+                  <div
+                    class="activity-icon-container bg-purple-100 text-purple-600"
+                  >
+                    <i data-lucide="clipboard-plus" class="activity-icon"></i>
+                  </div>
+                  <div>
+                    <p class="text-sm text-slate-700">
+                      Nueva tarea publicada:
+                      <span class="font-semibold">"Proyecto de Ciencias"</span>
+                      - Recompensa: 50 CCED Coins
+                    </p>
+                    <p class="text-xs text-slate-400">Hace 3 horas</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Modal Nuevo Estudiante -->
+    <div
+      id="newStudentModal"
+      class="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50 modal-backdrop hidden opacity-0"
+    >
+      <div
+        class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-11/12 max-w-lg modal-content transform scale-95 opacity-0"
+      >
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-semibold text-slate-800 flex items-center">
+            <i data-lucide="user-plus" class="modal-icon mr-2 text-sky-600"></i
+            >Agregar Nuevo Estudiante
+          </h2>
+          <button
+            id="closeNewStudentModal"
+            class="text-slate-400 hover:text-slate-600"
+          >
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+        </div>
+        <form id="newStudentForm" class="space-y-4">
+          <div>
+            <label
+              for="studentName"
+              class="block text-sm font-medium text-slate-700 mb-1"
+              >Nombre Completo</label
+            >
+            <input
+              type="text"
+              id="studentName"
+              name="studentName"
+              class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+              placeholder="Ej: María González"
+            />
+          </div>
+          <div>
+            <label
+              for="studentEmail"
+              class="block text-sm font-medium text-slate-700 mb-1"
+              >Email</label
+            >
+            <input
+              type="email"
+              id="studentEmail"
+              name="studentEmail"
+              class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+              placeholder="Ej: maria@cced.edu"
+            />
+          </div>
+          <div>
+            <label
+              for="studentPassword"
+              class="block text-sm font-medium text-slate-700 mb-1"
+              >Contraseña Temporal</label
+            >
+            <input
+              type="password"
+              id="studentPassword"
+              name="studentPassword"
+              class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+              placeholder="Mínimo 6 caracteres"
+            />
+          </div>
+          <div class="flex justify-end space-x-3 pt-2">
+            <button
+              type="button"
+              id="cancelNewStudent"
+              class="px-4 py-2 text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 bg-slate-200 text-slate-700 hover:bg-slate-300 focus:ring-slate-400"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 bg-sky-600 text-white hover:bg-sky-700 focus:ring-sky-500"
+            >
+              Agregar Estudiante
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Nueva Tarea -->
+    <div
+      id="newTaskModal"
+      class="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50 modal-backdrop hidden opacity-0"
+    >
+      <div
+        class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-11/12 max-w-lg modal-content transform scale-95 opacity-0"
+      >
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-semibold text-slate-800 flex items-center">
+            <i
+              data-lucide="clipboard-plus"
+              class="modal-icon mr-2 text-emerald-600"
+            ></i
+            >Crear Nueva Tarea
+          </h2>
+          <button
+            id="closeNewTaskModal"
+            class="text-slate-400 hover:text-slate-600"
+          >
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+        </div>
+        <form id="newTaskForm" class="space-y-4">
+          <div>
+            <label
+              for="taskTitle"
+              class="block text-sm font-medium text-slate-700 mb-1"
+              >Título de la Tarea</label
+            >
+            <input
+              type="text"
+              id="taskTitle"
+              name="taskTitle"
+              class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+              placeholder="Ej: Proyecto de Ciencias - Ecosistema"
+            />
+          </div>
+          <div>
+            <label
+              for="taskDescription"
+              class="block text-sm font-medium text-slate-700 mb-1"
+              >Descripción</label
+            >
+            <textarea
+              id="taskDescription"
+              name="taskDescription"
+              rows="3"
+              class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+              placeholder="Describe los detalles de la tarea..."
+            ></textarea>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                for="taskReward"
+                class="block text-sm font-medium text-slate-700 mb-1"
+                >Recompensa (CCED Coins)</label
+              >
+              <input
+                type="number"
+                id="taskReward"
+                name="taskReward"
+                class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                placeholder="Ej: 25"
+                min="1"
+              />
+            </div>
+            <div>
+              <label
+                for="taskDueDate"
+                class="block text-sm font-medium text-slate-700 mb-1"
+                >Fecha Límite</label
+              >
+              <input
+                type="date"
+                id="taskDueDate"
+                name="taskDueDate"
+                class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+              />
+            </div>
+          </div>
+          <div class="flex justify-end space-x-3 pt-2">
+            <button
+              type="button"
+              id="cancelNewTask"
+              class="px-4 py-2 text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 bg-slate-200 text-slate-700 hover:bg-slate-300 focus:ring-slate-400"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 bg-sky-600 text-white hover:bg-sky-700 focus:ring-sky-500"
+            >
+              Crear Tarea
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Generar Código -->
+    <div
+      id="generateCodeModal"
+      class="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50 modal-backdrop hidden opacity-0"
+    >
+      <div
+        class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-11/12 max-w-lg modal-content transform scale-95 opacity-0"
+      >
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-semibold text-slate-800 flex items-center">
+            <i
+              data-lucide="key-round"
+              class="modal-icon mr-2 text-purple-600"
+            ></i
+            >Generar Código de Registro
+          </h2>
+          <button
+            id="closeGenerateCodeModal"
+            class="text-slate-400 hover:text-slate-600"
+          >
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+        </div>
+        <form id="generateCodeForm" class="space-y-4">
+          <div>
+            <label
+              for="codeExpiration"
+              class="block text-sm font-medium text-slate-700 mb-1"
+              >Fecha de Expiración</label
+            >
+            <input
+              type="date"
+              id="codeExpiration"
+              name="codeExpiration"
+              class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+            />
+          </div>
+          <div class="bg-slate-50 p-4 rounded-lg">
+            <p class="text-sm text-slate-600 mb-2">Código generado:</p>
+            <div
+              class="flex items-center justify-between bg-white p-3 rounded border border-slate-200"
+            >
+              <code
+                id="generatedCode"
+                class="text-lg font-mono font-bold text-purple-600"
+                >CCED-2024-XXXX</code
+              >
+              <button
+                type="button"
+                id="copyCodeButton"
+                class="text-slate-500 hover:text-sky-500"
+              >
+                <i data-lucide="copy" class="w-5 h-5"></i>
+              </button>
+            </div>
+          </div>
+          <div class="flex justify-end space-x-3 pt-2">
+            <button
+              type="button"
+              id="cancelGenerateCode"
+              class="px-4 py-2 text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 bg-slate-200 text-slate-700 hover:bg-slate-300 focus:ring-slate-400"
+            >
+              Cerrar
+            </button>
+            <button
+              type="button"
+              id="generateNewCode"
+              class="px-4 py-2 text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 bg-purple-600 text-white hover:bg-purple-700 focus:ring-purple-500"
+            >
+              Generar Nuevo
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Solo incluimos el archivo JavaScript externo -->
+    <script src="../assets/js/admin/admin.js"></script>
+  </body>
+</html>

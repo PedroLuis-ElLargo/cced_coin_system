@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Sistema educativo CCED Coin - Plataforma de gestión académica con economía de tokens educativos"
+    />
+    <meta
+      name="keywords"
+      content="educación, cced coin, tokens educativos, sistema académico, estudiantes, tareas"
+    />
+    <meta name="author" content="CCED Coin System" />
+    <title>CCED Coin - Sistema Educativo con Tokens | Login</title>
+
+    <!-- Open Graph para redes sociales -->
+    <meta
+      property="og:title"
+      content="CCED Coin - Sistema Educativo con Tokens"
+    />
+    <meta
+      property="og:description"
+      content="Plataforma de gestión académica con economía de tokens educativos"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ccedcoin.edu" />
+
+    <!-- Schema.org markup para Google -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        "name": "CCED Coin System",
+        "description": "Sistema educativo con economía de tokens para gestión académica",
+        "url": "https://ccedcoin.edu"
+      }
+    </script>
+
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    />
+    <link rel="stylesheet" href="assets/css/index-style.css" />
+    <link
+      href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <main class="main-content" role="main">
+      <div class="container">
+        <!-- Formulario de Login -->
+        <div class="form-box login">
+          <form
+            action="#"
+            method="post"
+            role="form"
+            aria-label="Formulario de inicio de sesión"
+          >
+            <h1>Iniciar Sesión</h1>
+
+            <div class="input-box">
+              <input
+                type="email"
+                id="login-email"
+                name="email"
+                placeholder="Correo electrónico"
+                required
+                aria-required="true"
+                aria-label="Correo electrónico"
+              />
+              <i class="bx bxs-envelope" aria-hidden="true"></i>
+            </div>
+
+            <div class="input-box">
+              <input
+                type="password"
+                id="login-password"
+                name="password"
+                placeholder="Contraseña"
+                required
+                aria-required="true"
+                aria-label="Contraseña"
+              />
+              <i class="bx bxs-lock-alt" aria-hidden="true"></i>
+            </div>
+
+            <div class="forgot-link">
+              <a href="#" aria-label="Recuperar contraseña">
+                ¿Olvidaste tu contraseña?
+              </a>
+            </div>
+
+            <button
+              type="submit"
+              class="btn"
+              aria-label="Iniciar sesión en el sistema"
+            >
+              Iniciar Sesión
+            </button>
+          </form>
+        </div>
+
+        <!-- Formulario de Registro -->
+        <div class="form-box register">
+          <form
+            action="#"
+            method="post"
+            role="form"
+            aria-label="Formulario de registro"
+          >
+            <h1>Registro</h1>
+
+            <div class="input-box">
+              <input
+                type="text"
+                id="register-name"
+                name="name"
+                placeholder="Nombre completo"
+                required
+                aria-required="true"
+                aria-label="Nombre completo"
+              />
+              <i class="bx bxs-user" aria-hidden="true"></i>
+            </div>
+
+            <div class="input-box">
+              <input
+                type="email"
+                id="register-email"
+                name="email"
+                placeholder="Correo electrónico"
+                required
+                aria-required="true"
+                aria-label="Correo electrónico"
+              />
+              <i class="bx bxs-envelope" aria-hidden="true"></i>
+            </div>
+
+            <div class="input-box">
+              <input
+                type="password"
+                id="register-password"
+                name="password"
+                placeholder="Contraseña"
+                required
+                aria-required="true"
+                minlength="6"
+                aria-label="Contraseña"
+              />
+              <i class="bx bxs-lock-alt" aria-hidden="true"></i>
+            </div>
+
+            <div class="input-box">
+              <input
+                type="text"
+                id="register-code"
+                name="registrationCode"
+                placeholder="Código de registro"
+                required
+                aria-required="true"
+                aria-label="Código de registro"
+              />
+              <i class="bx bxs-key" aria-hidden="true"></i>
+            </div>
+
+            <button
+              type="submit"
+              class="btn"
+              aria-label="Registrarse en el sistema"
+            >
+              Registrarse
+            </button>
+          </form>
+        </div>
+
+        <!-- Panel de alternancia -->
+        <div class="toggle-box">
+          <div
+            class="toggle-panel toggle-left"
+            aria-labelledby="welcome-heading"
+          >
+            <h1 id="welcome-heading">¡Hola, Bienvenido!</h1>
+            <p>¿No tienes una cuenta?</p>
+            <button
+              class="btn register-btn"
+              aria-label="Ir al formulario de registro"
+            >
+              Registrarse
+            </button>
+          </div>
+
+          <div
+            class="toggle-panel toggle-right"
+            aria-labelledby="welcome-back-heading"
+          >
+            <h1 id="welcome-back-heading">¡Bienvenido de nuevo!</h1>
+            <p>¿Ya tienes una cuenta?</p>
+            <button
+              class="btn login-btn"
+              aria-label="Ir al formulario de inicio de sesión"
+            >
+              Iniciar Sesión
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script type="module" src="assets/js/index/index.js"></script>
+  </body>
+</html>

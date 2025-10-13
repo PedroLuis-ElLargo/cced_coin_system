@@ -123,17 +123,33 @@ exports.createStudent = async (req, res) => {
 exports.updateStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, email, password } = req.body;
+    const { nombre, email, password, balance } = req.body;
 
     // Verificar que el estudiante existe
     const students = await query(
       'SELECT id FROM users WHERE id = ? AND rol = "student"',
       [id]
     );
+
     if (students.length === 0) {
       return res
         .status(404)
         .json({ success: false, message: "Estudiante no encontrado" });
+    }
+
+    // Verificar si el email ya existe (excepto el del estudiante actual)
+    if (email) {
+      const existingEmail = await query(
+        'SELECT id FROM users WHERE email = ? AND id != ? AND rol = "student"',
+        [email, id]
+      );
+
+      if (existingEmail.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: "El email ya está siendo usado por otro estudiante",
+        });
+      }
     }
 
     let updates = [];
@@ -143,14 +159,22 @@ exports.updateStudent = async (req, res) => {
       updates.push("nombre = ?");
       values.push(nombre);
     }
+
     if (email) {
       updates.push("email = ?");
       values.push(email);
     }
+
     if (password) {
       const hashedPassword = await bcrypt.hash(password, 10);
       updates.push("password = ?");
       values.push(hashedPassword);
+    }
+
+    // ⭐ AGREGAR BALANCE
+    if (balance !== undefined && balance !== null) {
+      updates.push("balance = ?");
+      values.push(parseFloat(balance));
     }
 
     if (updates.length === 0) {

@@ -776,3 +776,424 @@ exports.getStatistics = async (req, res) => {
       .json({ success: false, message: "Error al obtener estadísticas" });
   }
 };
+
+// ==========================================
+// Agregar Monedas a Estudiante
+// ==========================================
+exports.addCoins = async (req, res) => {
+  try {
+    const { student_id, amount, reason } = req.body;
+
+    // Validaciones
+    if (!student_id || !amount || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Datos inválidos. Verifica el estudiante y la cantidad",
+      });
+    }
+
+    // Verificar que el estudiante existe
+    const student = await query(
+      "SELECT id, nombre, balance FROM users WHERE id = ? AND rol = 'student'",
+      [student_id]
+    );
+
+    if (!student || student.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Estudiante no encontrado",
+      });
+    }
+
+    // Actualizar balance del estudiante
+    await query("UPDATE users SET balance = balance + ? WHERE id = ?", [
+      amount,
+      student_id,
+    ]);
+
+    // Registrar transacción (usando campos: cantidad, descripcion, tipo='pago_admin')
+    await query(
+      `INSERT INTO transactions (user_id, tipo, cantidad, descripcion, fecha) 
+       VALUES (?, 'pago_admin', ?, ?, NOW())`,
+      [student_id, amount, reason || "Monedas agregadas por administrador"]
+    );
+
+    // Obtener nuevo balance
+    const updatedStudent = await query(
+      "SELECT balance FROM users WHERE id = ?",
+      [student_id]
+    );
+
+    console.log(
+      `✅ Agregadas ${amount} monedas a ${student[0].nombre} - Nuevo balance: ${updatedStudent[0].balance}`
+    );
+
+    res.json({
+      success: true,
+      message: `Se agregaron ${amount} CCED Coins a ${student[0].nombre}`,
+      new_balance: parseFloat(updatedStudent[0].balance),
+    });
+  } catch (error) {
+    console.error("❌ Error agregando monedas:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al agregar monedas",
+      error: error.message,
+    });
+  }
+};
+
+// ==========================================
+// Retirar Monedas de Estudiante
+// ==========================================
+exports.removeCoins = async (req, res) => {
+  try {
+    const { student_id, amount, reason } = req.body;
+
+    // Validaciones
+    if (!student_id || !amount || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Datos inválidos. Verifica el estudiante y la cantidad",
+      });
+    }
+
+    // Verificar que el estudiante existe y tiene suficientes monedas
+    const student = await query(
+      "SELECT id, nombre, balance FROM users WHERE id = ? AND rol = 'student'",
+      [student_id]
+    );
+
+    if (!student || student.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Estudiante no encontrado",
+      });
+    }
+
+    const currentBalance = parseFloat(student[0].balance);
+
+    if (currentBalance < amount) {
+      return res.status(400).json({
+        success: false,
+        message: `El estudiante solo tiene ${currentBalance.toFixed(
+          0
+        )} CCED Coins disponibles`,
+      });
+    }
+
+    // Actualizar balance del estudiante
+    await query("UPDATE users SET balance = balance - ? WHERE id = ?", [
+      amount,
+      student_id,
+    ]);
+
+    // Registrar transacción con cantidad negativa para indicar retiro
+    await query(
+      `INSERT INTO transactions (user_id, tipo, cantidad, descripcion, fecha) 
+       VALUES (?, 'pago_admin', ?, ?, NOW())`,
+      [student_id, -amount, reason || "Monedas retiradas por administrador"]
+    );
+
+    // Obtener nuevo balance
+    const updatedStudent = await query(
+      "SELECT balance FROM users WHERE id = ?",
+      [student_id]
+    );
+
+    console.log(
+      `✅ Retiradas ${amount} monedas de ${student[0].nombre} - Nuevo balance: ${updatedStudent[0].balance}`
+    );
+
+    res.json({
+      success: true,
+      message: `Se retiraron ${amount} CCED Coins de ${student[0].nombre}`,
+      new_balance: parseFloat(updatedStudent[0].balance),
+    });
+  } catch (error) {
+    console.error("❌ Error retirando monedas:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al retirar monedas",
+      error: error.message,
+    });
+  }
+};
+
+// ==========================================
+// Obtener Historial de Transacciones
+// ==========================================
+exports.getTransactions = async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+    const studentId = req.query.student_id;
+
+    // Usar la vista v_historial_transacciones que ya tiene los joins
+    let sql = `SELECT * FROM v_historial_transacciones`;
+    const params = [];
+
+    // Filtrar por estudiante si se proporciona
+    if (studentId) {
+      sql += " WHERE id IN (SELECT id FROM transactions WHERE user_id = ?)";
+      params.push(studentId);
+    }
+
+    sql += ` ORDER BY fecha DESC LIMIT ${limit}`;
+
+    const transactions = await query(sql, params);
+
+    res.json({
+      success: true,
+      transactions: transactions.map((t) => ({
+        id: t.id,
+        estudiante_nombre: t.estudiante,
+        tipo: t.tipo,
+        monto: parseFloat(t.cantidad) || 0, // Frontend espera 'monto'
+        motivo: t.descripcion, // Frontend espera 'motivo'
+        tarea: t.tarea,
+        examen: t.examen,
+        fecha: t.fecha,
+      })),
+    });
+  } catch (error) {
+    console.error("❌ Error obteniendo transacciones:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener historial de transacciones",
+      transactions: [],
+    });
+  }
+};
+
+// ==========================================
+// Obtener Resumen de Monedas
+// ==========================================
+exports.getSummary = async (req, res) => {
+  try {
+    // Usar la vista de estadísticas generales que ya existe
+    const stats = await query("SELECT * FROM v_estadisticas_generales");
+
+    if (!stats || stats.length === 0) {
+      return res.json({
+        success: true,
+        summary: {
+          total_circulation: 0,
+          total_students: 0,
+          average_coins: 0,
+          today_transactions: 0,
+          week_transactions: 0,
+          top_students: [],
+        },
+      });
+    }
+
+    const generalStats = stats[0];
+
+    // Transacciones del día
+    const todayTransactions = await query(
+      `SELECT COUNT(*) as count 
+       FROM transactions 
+       WHERE DATE(fecha) = CURDATE()`
+    );
+
+    // Transacciones de la semana
+    const weekTransactions = await query(
+      `SELECT COUNT(*) as count 
+       FROM transactions 
+       WHERE fecha >= DATE_SUB(NOW(), INTERVAL 7 DAY)`
+    );
+
+    // Top 5 estudiantes con más monedas (usar la vista de ranking)
+    const topStudents = await query(
+      `SELECT nombre, balance, tareas_completadas 
+       FROM v_ranking_monedas 
+       LIMIT 5`
+    );
+
+    const totalStudents = parseInt(generalStats.total_estudiantes) || 1;
+    const totalCirculation = parseFloat(generalStats.monedas_circulacion) || 0;
+    const averageCoins =
+      parseFloat(generalStats.promedio_monedas_estudiante) || 0;
+
+    res.json({
+      success: true,
+      summary: {
+        total_circulation: totalCirculation,
+        total_students: totalStudents,
+        average_coins: averageCoins,
+        today_transactions: parseInt(todayTransactions[0].count) || 0,
+        week_transactions: parseInt(weekTransactions[0].count) || 0,
+        top_students: topStudents.map((s) => ({
+          nombre: s.nombre,
+          balance: parseFloat(s.balance) || 0,
+          tareas_completadas: parseInt(s.tareas_completadas) || 0,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error obteniendo resumen de monedas:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener resumen",
+    });
+  }
+};
+
+// ==========================================
+// Transferir Monedas Entre Estudiantes (BONUS)
+// ==========================================
+exports.transferCoins = async (req, res) => {
+  try {
+    const { from_student_id, to_student_id, amount, reason } = req.body;
+
+    // Validaciones
+    if (
+      !from_student_id ||
+      !to_student_id ||
+      !amount ||
+      amount <= 0 ||
+      from_student_id === to_student_id
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Datos inválidos para la transferencia",
+      });
+    }
+
+    // Verificar ambos estudiantes
+    const fromStudent = await query(
+      "SELECT id, nombre, balance FROM users WHERE id = ? AND rol = 'student'",
+      [from_student_id]
+    );
+
+    const toStudent = await query(
+      "SELECT id, nombre, balance FROM users WHERE id = ? AND rol = 'student'",
+      [to_student_id]
+    );
+
+    if (!fromStudent.length || !toStudent.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Uno o ambos estudiantes no encontrados",
+      });
+    }
+
+    if (parseFloat(fromStudent[0].balance) < amount) {
+      return res.status(400).json({
+        success: false,
+        message: "Balance insuficiente para la transferencia",
+      });
+    }
+
+    // Realizar transferencia
+    await query("UPDATE users SET balance = balance - ? WHERE id = ?", [
+      amount,
+      from_student_id,
+    ]);
+
+    await query("UPDATE users SET balance = balance + ? WHERE id = ?", [
+      amount,
+      to_student_id,
+    ]);
+
+    // Registrar transacciones
+    const transferReason =
+      reason ||
+      `Transferencia de ${fromStudent[0].nombre} a ${toStudent[0].nombre}`;
+
+    // Débito para quien envía (cantidad negativa)
+    await query(
+      `INSERT INTO transactions (user_id, tipo, cantidad, descripcion, fecha) 
+       VALUES (?, 'pago_admin', ?, ?, NOW())`,
+      [from_student_id, -amount, `${transferReason} (enviado)`]
+    );
+
+    // Crédito para quien recibe (cantidad positiva)
+    await query(
+      `INSERT INTO transactions (user_id, tipo, cantidad, descripcion, fecha) 
+       VALUES (?, 'pago_admin', ?, ?, NOW())`,
+      [to_student_id, amount, `${transferReason} (recibido)`]
+    );
+
+    console.log(
+      `✅ Transferencia: ${amount} monedas de ${fromStudent[0].nombre} a ${toStudent[0].nombre}`
+    );
+
+    res.json({
+      success: true,
+      message: `Transferencia completada: ${amount} CCED Coins de ${fromStudent[0].nombre} a ${toStudent[0].nombre}`,
+    });
+  } catch (error) {
+    console.error("❌ Error en transferencia:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al realizar la transferencia",
+    });
+  }
+};
+
+// ==========================================
+// Ajustar Balance (Corrección Manual)
+// ==========================================
+exports.adjustBalance = async (req, res) => {
+  try {
+    const { student_id, new_balance, reason } = req.body;
+
+    if (!student_id || new_balance < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Datos inválidos",
+      });
+    }
+
+    const student = await query(
+      "SELECT id, nombre, balance FROM users WHERE id = ? AND rol = 'student'",
+      [student_id]
+    );
+
+    if (!student.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Estudiante no encontrado",
+      });
+    }
+
+    const oldBalance = parseFloat(student[0].balance);
+    const difference = new_balance - oldBalance;
+
+    // Actualizar balance
+    await query("UPDATE users SET balance = ? WHERE id = ?", [
+      new_balance,
+      student_id,
+    ]);
+
+    // Registrar ajuste (tipo='ajuste')
+    await query(
+      `INSERT INTO transactions (user_id, tipo, cantidad, descripcion, fecha) 
+       VALUES (?, 'ajuste', ?, ?, NOW())`,
+      [
+        student_id,
+        difference,
+        reason || `Ajuste manual de balance (${oldBalance} → ${new_balance})`,
+      ]
+    );
+
+    console.log(
+      `✅ Balance ajustado para ${student[0].nombre}: ${oldBalance} → ${new_balance}`
+    );
+
+    res.json({
+      success: true,
+      message: `Balance ajustado correctamente`,
+      old_balance: oldBalance,
+      new_balance: new_balance,
+      difference: difference,
+    });
+  } catch (error) {
+    console.error("❌ Error ajustando balance:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al ajustar balance",
+    });
+  }
+};

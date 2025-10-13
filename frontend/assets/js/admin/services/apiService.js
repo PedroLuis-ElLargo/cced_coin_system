@@ -109,6 +109,35 @@ class ApiService {
       method: "DELETE",
     });
   }
+
+  // ==========================================
+  // MONEDAS (NUEVO)
+  // ==========================================
+  async addCoinsToStudent(studentId, amount, reason) {
+    return this.request("/admin/coins/add", {
+      method: "POST",
+      body: JSON.stringify({
+        student_id: studentId,
+        amount: amount,
+        reason: reason,
+      }),
+    });
+  }
+
+  async removeCoinsFromStudent(studentId, amount, reason) {
+    return this.request("/admin/coins/remove", {
+      method: "POST",
+      body: JSON.stringify({
+        student_id: studentId,
+        amount: amount,
+        reason: reason,
+      }),
+    });
+  }
+
+  async getTransactions() {
+    return this.request("/admin/transactions");
+  }
 }
 
 export default new ApiService();

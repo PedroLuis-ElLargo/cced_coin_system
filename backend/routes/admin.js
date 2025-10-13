@@ -79,4 +79,26 @@ router.post("/exams/scores", adminController.registerExamScores);
 // GET /api/admin/statistics - Obtener estadísticas generales
 router.get("/statistics", adminController.getStatistics);
 
+// ==========================================
+// Rutas de Gestión de Monedas
+// ==========================================
+
+// POST /api/admin/coins/add - Agregar monedas a un estudiante
+router.post("/add", adminController.addCoins);
+
+// POST /api/admin/coins/remove - Retirar monedas de un estudiante
+router.post("/remove", adminController.removeCoins);
+
+// POST /api/admin/coins/transfer - Transferir monedas entre estudiantes
+router.post("/transfer", adminController.transferCoins);
+
+// POST /api/admin/coins/adjust - Ajustar balance manualmente
+router.post("/adjust", adminController.adjustBalance);
+
+// GET /api/admin/coins/summary - Obtener resumen general de monedas
+router.get("/summary", adminController.getSummary);
+
+// GET /api/admin/transactions - Obtener historial de transacciones
+router.get("/transactions", adminController.getTransactions);
+
 module.exports = router;

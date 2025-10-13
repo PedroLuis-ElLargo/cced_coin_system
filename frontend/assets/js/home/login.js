@@ -322,9 +322,5 @@ document.querySelectorAll(".input-box input").forEach((input) => {
   }
 });
 
-// ==========================================
-// INICIALIZACIÓN (SOLO PARA LOGIN)
-// ==========================================
-
 // Solo verificar autenticación si estamos en la página de login
 checkExistingAuth();

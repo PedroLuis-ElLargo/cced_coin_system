@@ -6,9 +6,9 @@ import dashboardModule from "../modules/dashboardModule.js";
 import studentsModule from "../modules/studentsModule.js";
 import tasksModule from "../modules/tasksModule.js";
 import codesModule from "../modules/codesModule.js";
+import monedasModule from "../modules/monedasModule.js";
 import {
   examenesModule,
-  monedasModule,
   rankingsModule,
   reportesModule,
 } from "../modules/otherModules.js";

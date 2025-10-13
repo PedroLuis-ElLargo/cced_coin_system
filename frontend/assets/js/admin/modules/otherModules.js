@@ -35,96 +35,96 @@ class ExamenesModule {
 // ==========================================
 // MÓDULO DE MONEDAS
 // ==========================================
-class MonedasModule {
-  render() {
-    const content = `
-      <div class="space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="bg-white p-6 rounded-xl shadow-lg">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-slate-500 text-sm">Total en Circulación</p>
-                <p class="text-2xl font-bold text-amber-600" id="totalCoins">0</p>
-              </div>
-              <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                <i data-lucide="coins" class="w-6 h-6 text-amber-600"></i>
-              </div>
-            </div>
-          </div>
-          <div class="bg-white p-6 rounded-xl shadow-lg">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-slate-500 text-sm">Promedio por Estudiante</p>
-                <p class="text-2xl font-bold text-sky-600" id="avgCoins">0</p>
-              </div>
-              <div class="w-12 h-12 bg-sky-100 rounded-full flex items-center justify-center">
-                <i data-lucide="trending-up" class="w-6 h-6 text-sky-600"></i>
-              </div>
-            </div>
-          </div>
-          <div class="bg-white p-6 rounded-xl shadow-lg">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-slate-500 text-sm">Transacciones Hoy</p>
-                <p class="text-2xl font-bold text-emerald-600" id="todayTransactions">0</p>
-              </div>
-              <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                <i data-lucide="arrow-right-left" class="w-6 h-6 text-emerald-600"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="bg-white p-6 rounded-xl shadow-lg">
-          <h3 class="text-lg font-semibold text-slate-700 mb-4">Gestión de Monedas</h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button class="p-4 border-2 border-dashed border-slate-300 rounded-lg hover:border-sky-500 hover:bg-sky-50 transition-colors">
-              <i data-lucide="plus-circle" class="w-8 h-8 mx-auto mb-2 text-sky-600"></i>
-              <p class="text-sm font-medium text-slate-600">Agregar Monedas</p>
-            </button>
-            <button class="p-4 border-2 border-dashed border-slate-300 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors">
-              <i data-lucide="minus-circle" class="w-8 h-8 mx-auto mb-2 text-red-600"></i>
-              <p class="text-sm font-medium text-slate-600">Retirar Monedas</p>
-            </button>
-            <button class="p-4 border-2 border-dashed border-slate-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors">
-              <i data-lucide="history" class="w-8 h-8 mx-auto mb-2 text-purple-600"></i>
-              <p class="text-sm font-medium text-slate-600">Historial</p>
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-    uiService.updateMainContent(content);
-    this.loadStats();
-  }
+// class MonedasModule {
+//   render() {
+//     const content = `
+//       <div class="space-y-6">
+//         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+//           <div class="bg-white p-6 rounded-xl shadow-lg">
+//             <div class="flex items-center justify-between">
+//               <div>
+//                 <p class="text-slate-500 text-sm">Total en Circulación</p>
+//                 <p class="text-2xl font-bold text-amber-600" id="totalCoins">0</p>
+//               </div>
+//               <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+//                 <i data-lucide="coins" class="w-6 h-6 text-amber-600"></i>
+//               </div>
+//             </div>
+//           </div>
+//           <div class="bg-white p-6 rounded-xl shadow-lg">
+//             <div class="flex items-center justify-between">
+//               <div>
+//                 <p class="text-slate-500 text-sm">Promedio por Estudiante</p>
+//                 <p class="text-2xl font-bold text-sky-600" id="avgCoins">0</p>
+//               </div>
+//               <div class="w-12 h-12 bg-sky-100 rounded-full flex items-center justify-center">
+//                 <i data-lucide="trending-up" class="w-6 h-6 text-sky-600"></i>
+//               </div>
+//             </div>
+//           </div>
+//           <div class="bg-white p-6 rounded-xl shadow-lg">
+//             <div class="flex items-center justify-between">
+//               <div>
+//                 <p class="text-slate-500 text-sm">Transacciones Hoy</p>
+//                 <p class="text-2xl font-bold text-emerald-600" id="todayTransactions">0</p>
+//               </div>
+//               <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+//                 <i data-lucide="arrow-right-left" class="w-6 h-6 text-emerald-600"></i>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//         <div class="bg-white p-6 rounded-xl shadow-lg">
+//           <h3 class="text-lg font-semibold text-slate-700 mb-4">Gestión de Monedas</h3>
+//           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+//             <button class="p-4 border-2 border-dashed border-slate-300 rounded-lg hover:border-sky-500 hover:bg-sky-50 transition-colors">
+//               <i data-lucide="plus-circle" class="w-8 h-8 mx-auto mb-2 text-sky-600"></i>
+//               <p class="text-sm font-medium text-slate-600">Agregar Monedas</p>
+//             </button>
+//             <button class="p-4 border-2 border-dashed border-slate-300 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors">
+//               <i data-lucide="minus-circle" class="w-8 h-8 mx-auto mb-2 text-red-600"></i>
+//               <p class="text-sm font-medium text-slate-600">Retirar Monedas</p>
+//             </button>
+//             <button class="p-4 border-2 border-dashed border-slate-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors">
+//               <i data-lucide="history" class="w-8 h-8 mx-auto mb-2 text-purple-600"></i>
+//               <p class="text-sm font-medium text-slate-600">Historial</p>
+//             </button>
+//           </div>
+//         </div>
+//       </div>
+//     `;
+//     uiService.updateMainContent(content);
+//     this.loadStats();
+//   }
 
-  async loadStats() {
-    try {
-      const data = await apiService.getStatistics();
+//   async loadStats() {
+//     try {
+//       const data = await apiService.getStatistics();
 
-      if (data.success) {
-        const stats = data.statistics;
-        const totalCoinsEl = document.getElementById("totalCoins");
-        const avgCoinsEl = document.getElementById("avgCoins");
+//       if (data.success) {
+//         const stats = data.statistics;
+//         const totalCoinsEl = document.getElementById("totalCoins");
+//         const avgCoinsEl = document.getElementById("avgCoins");
 
-        if (totalCoinsEl) {
-          totalCoinsEl.textContent = (
-            Number(stats.monedas_circulacion) || 0
-          ).toFixed(0);
-        }
+//         if (totalCoinsEl) {
+//           totalCoinsEl.textContent = (
+//             Number(stats.monedas_circulacion) || 0
+//           ).toFixed(0);
+//         }
 
-        if (avgCoinsEl) {
-          const avg =
-            stats.total_estudiantes > 0
-              ? (stats.monedas_circulacion / stats.total_estudiantes).toFixed(0)
-              : 0;
-          avgCoinsEl.textContent = avg;
-        }
-      }
-    } catch (error) {
-      console.error("Error cargando estadísticas de monedas:", error);
-    }
-  }
-}
+//         if (avgCoinsEl) {
+//           const avg =
+//             stats.total_estudiantes > 0
+//               ? (stats.monedas_circulacion / stats.total_estudiantes).toFixed(0)
+//               : 0;
+//           avgCoinsEl.textContent = avg;
+//         }
+//       }
+//     } catch (error) {
+//       console.error("Error cargando estadísticas de monedas:", error);
+//     }
+//   }
+// }
 
 // ==========================================
 // MÓDULO DE RANKINGS
@@ -243,6 +243,5 @@ class ReportesModule {
 // EXPORTAR MÓDULOS
 // ==========================================
 export const examenesModule = new ExamenesModule();
-export const monedasModule = new MonedasModule();
 export const rankingsModule = new RankingsModule();
 export const reportesModule = new ReportesModule();

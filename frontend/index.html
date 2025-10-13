@@ -3,212 +3,886 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Sistema educativo CCED Coin - Plataforma de gestión académica con economía de tokens educativos"
-    />
-    <meta
-      name="keywords"
-      content="educación, cced coin, tokens educativos, sistema académico, estudiantes, tareas"
-    />
-    <meta name="author" content="CCED Coin System" />
-    <title>CCED Coin - Sistema Educativo con Tokens | Login</title>
+    <title>CCED Coin - Sistema de Recompensas Educativas</title>
 
-    <!-- Open Graph para redes sociales -->
-    <meta
-      property="og:title"
-      content="CCED Coin - Sistema Educativo con Tokens"
-    />
-    <meta
-      property="og:description"
-      content="Plataforma de gestión académica con economía de tokens educativos"
-    />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://ccedcoin.edu" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Schema.org markup para Google -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "EducationalOrganization",
-        "name": "CCED Coin System",
-        "description": "Sistema educativo con economía de tokens para gestión académica",
-        "url": "https://ccedcoin.edu"
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+
+      * {
+        font-family: "Inter", sans-serif;
       }
-    </script>
 
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
-    />
-    <link rel="stylesheet" href="assets/css/index-style.css" />
-    <link
-      href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
-      rel="stylesheet"
-    />
+      .gradient-text {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .glass-effect {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .hero-pattern {
+        background-color: #f8fafc;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23667eea' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      }
+
+      .stat-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      }
+
+      .feature-card {
+        transition: all 0.3s ease;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-5px);
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-20px);
+        }
+      }
+
+      .float-animation {
+        animation: float 3s ease-in-out infinite;
+      }
+    </style>
   </head>
-
-  <body>
-    <main class="main-content" role="main">
-      <div class="container">
-        <!-- Formulario de Login -->
-        <div class="form-box login">
-          <form
-            action="#"
-            method="post"
-            role="form"
-            aria-label="Formulario de inicio de sesión"
-          >
-            <h1>Iniciar Sesión</h1>
-
-            <div class="input-box">
-              <input
-                type="email"
-                id="login-email"
-                name="email"
-                placeholder="Correo electrónico"
-                required
-                aria-required="true"
-                aria-label="Correo electrónico"
-              />
-              <i class="bx bxs-envelope" aria-hidden="true"></i>
-            </div>
-
-            <div class="input-box">
-              <input
-                type="password"
-                id="login-password"
-                name="password"
-                placeholder="Contraseña"
-                required
-                aria-required="true"
-                aria-label="Contraseña"
-              />
-              <i class="bx bxs-lock-alt" aria-hidden="true"></i>
-            </div>
-
-            <div class="forgot-link">
-              <a href="#" aria-label="Recuperar contraseña">
-                ¿Olvidaste tu contraseña?
-              </a>
-            </div>
-
-            <button
-              type="submit"
-              class="btn"
-              aria-label="Iniciar sesión en el sistema"
+  <body class="bg-slate-50">
+    <!-- Navigation -->
+    <nav
+      class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <!-- Logo -->
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-500 rounded-xl flex items-center justify-center"
             >
-              Iniciar Sesión
-            </button>
-          </form>
-        </div>
-
-        <!-- Formulario de Registro -->
-        <div class="form-box register">
-          <form
-            action="#"
-            method="post"
-            role="form"
-            aria-label="Formulario de registro"
-          >
-            <h1>Registro</h1>
-
-            <div class="input-box">
-              <input
-                type="text"
-                id="register-name"
-                name="name"
-                placeholder="Nombre completo"
-                required
-                aria-required="true"
-                aria-label="Nombre completo"
-              />
-              <i class="bx bxs-user" aria-hidden="true"></i>
+              <i data-lucide="coins" class="w-6 h-6 text-white"></i>
             </div>
-
-            <div class="input-box">
-              <input
-                type="email"
-                id="register-email"
-                name="email"
-                placeholder="Correo electrónico"
-                required
-                aria-required="true"
-                aria-label="Correo electrónico"
-              />
-              <i class="bx bxs-envelope" aria-hidden="true"></i>
-            </div>
-
-            <div class="input-box">
-              <input
-                type="password"
-                id="register-password"
-                name="password"
-                placeholder="Contraseña"
-                required
-                aria-required="true"
-                minlength="6"
-                aria-label="Contraseña"
-              />
-              <i class="bx bxs-lock-alt" aria-hidden="true"></i>
-            </div>
-
-            <div class="input-box">
-              <input
-                type="text"
-                id="register-code"
-                name="registrationCode"
-                placeholder="Código de registro"
-                required
-                aria-required="true"
-                aria-label="Código de registro"
-              />
-              <i class="bx bxs-key" aria-hidden="true"></i>
-            </div>
-
-            <button
-              type="submit"
-              class="btn"
-              aria-label="Registrarse en el sistema"
-            >
-              Registrarse
-            </button>
-          </form>
-        </div>
-
-        <!-- Panel de alternancia -->
-        <div class="toggle-box">
-          <div
-            class="toggle-panel toggle-left"
-            aria-labelledby="welcome-heading"
-          >
-            <h1 id="welcome-heading">¡Hola, Bienvenido!</h1>
-            <p>¿No tienes una cuenta?</p>
-            <button
-              class="btn register-btn"
-              aria-label="Ir al formulario de registro"
-            >
-              Registrarse
-            </button>
+            <span class="text-2xl font-bold gradient-text">CCED Coin</span>
           </div>
 
-          <div
-            class="toggle-panel toggle-right"
-            aria-labelledby="welcome-back-heading"
+          <!-- Desktop Menu -->
+          <div class="hidden md:flex items-center space-x-8">
+            <a
+              href="#inicio"
+              class="text-slate-700 hover:text-purple-600 transition-colors font-medium"
+              >Inicio</a
+            >
+            <a
+              href="#caracteristicas"
+              class="text-slate-700 hover:text-purple-600 transition-colors font-medium"
+              >Características</a
+            >
+            <a
+              href="#estadisticas"
+              class="text-slate-700 hover:text-purple-600 transition-colors font-medium"
+              >Estadísticas</a
+            >
+            <a
+              href="#como-funciona"
+              class="text-slate-700 hover:text-purple-600 transition-colors font-medium"
+              >¿Cómo Funciona?</a
+            >
+          </div>
+
+          <!-- Auth Buttons -->
+          <div class="hidden md:flex items-center space-x-4">
+            <a
+              href="views/login.html"
+              class="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-500 text-white rounded-lg hover:shadow-lg transition-all font-medium"
+            >
+              Registrarse
+            </a>
+          </div>
+
+          <!-- Mobile Menu Button -->
+          <button id="mobileMenuBtn" class="md:hidden p-2 text-slate-700">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div
+        id="mobileMenu"
+        class="hidden md:hidden bg-white border-t border-slate-200"
+      >
+        <div class="px-4 py-4 space-y-3">
+          <a
+            href="#inicio"
+            class="block py-2 text-slate-700 hover:text-purple-600 font-medium"
+            >Inicio</a
           >
-            <h1 id="welcome-back-heading">¡Bienvenido de nuevo!</h1>
-            <p>¿Ya tienes una cuenta?</p>
-            <button
-              class="btn login-btn"
-              aria-label="Ir al formulario de inicio de sesión"
+          <a
+            href="#caracteristicas"
+            class="block py-2 text-slate-700 hover:text-purple-600 font-medium"
+            >Características</a
+          >
+          <a
+            href="#estadisticas"
+            class="block py-2 text-slate-700 hover:text-purple-600 font-medium"
+            >Estadísticas</a
+          >
+          <a
+            href="#como-funciona"
+            class="block py-2 text-slate-700 hover:text-purple-600 font-medium"
+            >¿Cómo Funciona?</a
+          >
+          <div class="pt-4 space-y-2">
+            <a
+              href="login.html"
+              class="block w-full text-center px-4 py-2 border border-purple-600 text-purple-600 rounded-lg font-medium"
             >
               Iniciar Sesión
-            </button>
+            </a>
+            <a
+              href="register.html"
+              class="block w-full text-center px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-500 text-white rounded-lg font-medium"
+            >
+              Registrarse
+            </a>
           </div>
         </div>
       </div>
-    </main>
+    </nav>
 
-    <script type="module" src="assets/js/index/index.js"></script>
+    <!-- Hero Section -->
+    <section id="inicio" class="pt-24 pb-20 hero-pattern">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <!-- Text Content -->
+          <div data-aos="fade-right">
+            <div class="inline-block px-4 py-2 bg-purple-100 rounded-full mb-6">
+              <span class="text-purple-700 font-semibold text-sm"
+                >🎓 Educación Gamificada</span
+              >
+            </div>
+            <h1
+              class="text-5xl lg:text-6xl font-extrabold text-slate-900 mb-6 leading-tight"
+            >
+              Aprende, Gana,
+              <span class="gradient-text">Triunfa</span>
+            </h1>
+            <p class="text-xl text-slate-600 mb-8 leading-relaxed">
+              Sistema revolucionario de recompensas educativas que motiva a los
+              estudiantes a través de monedas digitales. Completa tareas, gana
+              CCED Coins y alcanza tus metas académicas.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4">
+              <a
+                href="register.html"
+                class="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-500 text-white rounded-xl font-semibold hover:shadow-2xl transition-all transform hover:scale-105 text-center"
+              >
+                <span class="flex items-center justify-center gap-2">
+                  <i data-lucide="rocket" class="w-5 h-5"></i>
+                  Comenzar Gratis
+                </span>
+              </a>
+              <a
+                href="#como-funciona"
+                class="px-8 py-4 bg-white border-2 border-slate-300 text-slate-700 rounded-xl font-semibold hover:border-purple-600 hover:text-purple-600 transition-all text-center"
+              >
+                <span class="flex items-center justify-center gap-2">
+                  <i data-lucide="play-circle" class="w-5 h-5"></i>
+                  Ver Demo
+                </span>
+              </a>
+            </div>
+
+            <!-- Stats Preview -->
+            <div class="grid grid-cols-3 gap-6 mt-12">
+              <div data-aos="fade-up" data-aos-delay="100">
+                <div class="text-3xl font-bold gradient-text" id="heroStudents">
+                  0
+                </div>
+                <div class="text-sm text-slate-600 mt-1">
+                  Estudiantes Activos
+                </div>
+              </div>
+              <div data-aos="fade-up" data-aos-delay="200">
+                <div class="text-3xl font-bold gradient-text" id="heroTasks">
+                  0
+                </div>
+                <div class="text-sm text-slate-600 mt-1">
+                  Tareas Completadas
+                </div>
+              </div>
+              <div data-aos="fade-up" data-aos-delay="300">
+                <div class="text-3xl font-bold gradient-text" id="heroCoins">
+                  0
+                </div>
+                <div class="text-sm text-slate-600 mt-1">CCED Distribuidos</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero Image/Animation -->
+          <div class="relative" data-aos="fade-left">
+            <div class="relative z-10 float-animation">
+              <img
+                src="https://illustrations.popsy.co/amber/remote-work.svg"
+                alt="Education Hero"
+                class="w-full"
+              />
+            </div>
+            <!-- Decorative Elements -->
+            <div
+              class="absolute top-10 right-10 w-20 h-20 bg-purple-200 rounded-full blur-3xl opacity-60"
+            ></div>
+            <div
+              class="absolute bottom-10 left-10 w-32 h-32 bg-blue-200 rounded-full blur-3xl opacity-60"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="caracteristicas" class="py-20 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16" data-aos="fade-up">
+          <h2 class="text-4xl font-bold text-slate-900 mb-4">
+            ¿Por qué elegir <span class="gradient-text">CCED Coin?</span>
+          </h2>
+          <p class="text-xl text-slate-600 max-w-2xl mx-auto">
+            Una plataforma completa diseñada para transformar la educación
+            mediante la gamificación
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <!-- Feature 1 -->
+          <div
+            class="feature-card bg-gradient-to-br from-purple-50 to-blue-50 p-8 rounded-2xl"
+            data-aos="fade-up"
+            data-aos-delay="100"
+          >
+            <div
+              class="w-14 h-14 bg-gradient-to-br from-purple-600 to-blue-500 rounded-xl flex items-center justify-center mb-6"
+            >
+              <i data-lucide="trophy" class="w-7 h-7 text-white"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-3">
+              Sistema de Recompensas
+            </h3>
+            <p class="text-slate-600">
+              Gana monedas digitales completando tareas y alcanzando objetivos
+              académicos. ¡Tu esfuerzo tiene valor!
+            </p>
+          </div>
+
+          <!-- Feature 2 -->
+          <div
+            class="feature-card bg-gradient-to-br from-emerald-50 to-teal-50 p-8 rounded-2xl"
+            data-aos="fade-up"
+            data-aos-delay="200"
+          >
+            <div
+              class="w-14 h-14 bg-gradient-to-br from-emerald-600 to-teal-500 rounded-xl flex items-center justify-center mb-6"
+            >
+              <i data-lucide="clipboard-check" class="w-7 h-7 text-white"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-3">
+              Gestión de Tareas
+            </h3>
+            <p class="text-slate-600">
+              Sistema completo para crear, asignar y completar tareas educativas
+              con seguimiento en tiempo real.
+            </p>
+          </div>
+
+          <!-- Feature 3 -->
+          <div
+            class="feature-card bg-gradient-to-br from-amber-50 to-orange-50 p-8 rounded-2xl"
+            data-aos="fade-up"
+            data-aos-delay="300"
+          >
+            <div
+              class="w-14 h-14 bg-gradient-to-br from-amber-600 to-orange-500 rounded-xl flex items-center justify-center mb-6"
+            >
+              <i data-lucide="bar-chart-3" class="w-7 h-7 text-white"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-3">
+              Rankings Dinámicos
+            </h3>
+            <p class="text-slate-600">
+              Compite sanamente con tus compañeros y visualiza tu progreso en
+              rankings actualizados en tiempo real.
+            </p>
+          </div>
+
+          <!-- Feature 4 -->
+          <div
+            class="feature-card bg-gradient-to-br from-pink-50 to-rose-50 p-8 rounded-2xl"
+            data-aos="fade-up"
+            data-aos-delay="100"
+          >
+            <div
+              class="w-14 h-14 bg-gradient-to-br from-pink-600 to-rose-500 rounded-xl flex items-center justify-center mb-6"
+            >
+              <i data-lucide="users" class="w-7 h-7 text-white"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-3">
+              Panel de Administración
+            </h3>
+            <p class="text-slate-600">
+              Herramientas completas para profesores: gestión de estudiantes,
+              tareas, calificaciones y estadísticas.
+            </p>
+          </div>
+
+          <!-- Feature 5 -->
+          <div
+            class="feature-card bg-gradient-to-br from-indigo-50 to-purple-50 p-8 rounded-2xl"
+            data-aos="fade-up"
+            data-aos-delay="200"
+          >
+            <div
+              class="w-14 h-14 bg-gradient-to-br from-indigo-600 to-purple-500 rounded-xl flex items-center justify-center mb-6"
+            >
+              <i data-lucide="shield-check" class="w-7 h-7 text-white"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-3">
+              Seguro y Confiable
+            </h3>
+            <p class="text-slate-600">
+              Sistema con autenticación segura, roles de usuario y protección de
+              datos académicos.
+            </p>
+          </div>
+
+          <!-- Feature 6 -->
+          <div
+            class="feature-card bg-gradient-to-br from-cyan-50 to-blue-50 p-8 rounded-2xl"
+            data-aos="fade-up"
+            data-aos-delay="300"
+          >
+            <div
+              class="w-14 h-14 bg-gradient-to-br from-cyan-600 to-blue-500 rounded-xl flex items-center justify-center mb-6"
+            >
+              <i data-lucide="smartphone" class="w-7 h-7 text-white"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-3">
+              100% Responsive
+            </h3>
+            <p class="text-slate-600">
+              Accede desde cualquier dispositivo: computadora, tablet o
+              smartphone. Educación sin límites.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section
+      id="estadisticas"
+      class="py-20 gradient-bg relative overflow-hidden"
+    >
+      <!-- Decorative Elements -->
+      <div class="absolute top-0 left-0 w-full h-full opacity-10">
+        <div
+          class="absolute top-20 left-20 w-40 h-40 bg-white rounded-full blur-3xl"
+        ></div>
+        <div
+          class="absolute bottom-20 right-20 w-60 h-60 bg-white rounded-full blur-3xl"
+        ></div>
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center mb-16" data-aos="fade-up">
+          <h2 class="text-4xl font-bold text-white mb-4">
+            Estadísticas en Tiempo Real
+          </h2>
+          <p class="text-xl text-purple-100">
+            Mira el impacto de CCED Coin en la comunidad educativa
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <!-- Stat Card 1 -->
+          <div
+            class="stat-card glass-effect rounded-2xl p-8 text-center"
+            data-aos="fade-up"
+            data-aos-delay="100"
+          >
+            <div
+              class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+              <i data-lucide="users" class="w-8 h-8 text-white"></i>
+            </div>
+            <div class="text-5xl font-bold text-white mb-2" id="statStudents">
+              0
+            </div>
+            <div class="text-purple-100 font-medium">
+              Estudiantes Registrados
+            </div>
+          </div>
+
+          <!-- Stat Card 2 -->
+          <div
+            class="stat-card glass-effect rounded-2xl p-8 text-center"
+            data-aos="fade-up"
+            data-aos-delay="200"
+          >
+            <div
+              class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+              <i data-lucide="clipboard-check" class="w-8 h-8 text-white"></i>
+            </div>
+            <div
+              class="text-5xl font-bold text-white mb-2"
+              id="statTasksCompleted"
+            >
+              0
+            </div>
+            <div class="text-purple-100 font-medium">Tareas Completadas</div>
+          </div>
+
+          <!-- Stat Card 3 -->
+          <div
+            class="stat-card glass-effect rounded-2xl p-8 text-center"
+            data-aos="fade-up"
+            data-aos-delay="300"
+          >
+            <div
+              class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+              <i data-lucide="coins" class="w-8 h-8 text-white"></i>
+            </div>
+            <div class="text-5xl font-bold text-white mb-2" id="statCoins">
+              0
+            </div>
+            <div class="text-purple-100 font-medium">
+              CCED Coins en Circulación
+            </div>
+          </div>
+
+          <!-- Stat Card 4 -->
+          <div
+            class="stat-card glass-effect rounded-2xl p-8 text-center"
+            data-aos="fade-up"
+            data-aos-delay="400"
+          >
+            <div
+              class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+              <i data-lucide="file-text" class="w-8 h-8 text-white"></i>
+            </div>
+            <div
+              class="text-5xl font-bold text-white mb-2"
+              id="statActiveTasks"
+            >
+              0
+            </div>
+            <div class="text-purple-100 font-medium">Tareas Activas</div>
+          </div>
+        </div>
+
+        <!-- Additional Stats -->
+        <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div
+            class="glass-effect rounded-xl p-6 text-center"
+            data-aos="fade-up"
+            data-aos-delay="100"
+          >
+            <div class="text-3xl font-bold text-white mb-1" id="statAvgCoins">
+              0
+            </div>
+            <div class="text-purple-100 text-sm">
+              Promedio de CCED por Estudiante
+            </div>
+          </div>
+
+          <div
+            class="glass-effect rounded-xl p-6 text-center"
+            data-aos="fade-up"
+            data-aos-delay="200"
+          >
+            <div class="text-3xl font-bold text-white mb-1" id="statAvgTasks">
+              0
+            </div>
+            <div class="text-purple-100 text-sm">
+              Promedio de Tareas por Estudiante
+            </div>
+          </div>
+
+          <div
+            class="glass-effect rounded-xl p-6 text-center"
+            data-aos="fade-up"
+            data-aos-delay="300"
+          >
+            <div
+              class="text-3xl font-bold text-white mb-1"
+              id="statCompletionRate"
+            >
+              0%
+            </div>
+            <div class="text-purple-100 text-sm">Tasa de Completitud</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Top Students Section (Agregar después de la sección de estadísticas) -->
+    <section class="py-20 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16" data-aos="fade-up">
+          <h2 class="text-4xl font-bold text-slate-900 mb-4">
+            🏆 <span class="gradient-text">Top Estudiantes</span>
+          </h2>
+          <p class="text-xl text-slate-600">
+            Los mejores estudiantes de nuestra comunidad
+          </p>
+        </div>
+
+        <div id="topStudentsRanking" class="max-w-3xl mx-auto space-y-4">
+          <!-- Se llenará dinámicamente -->
+          <div class="text-center py-8">
+            <i
+              data-lucide="loader"
+              class="w-8 h-8 mx-auto mb-2 animate-spin text-slate-400"
+            ></i>
+            <p class="text-slate-400">Cargando ranking...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="como-funciona" class="py-20 bg-slate-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16" data-aos="fade-up">
+          <h2 class="text-4xl font-bold text-slate-900 mb-4">
+            ¿Cómo Funciona <span class="gradient-text">CCED Coin?</span>
+          </h2>
+          <p class="text-xl text-slate-600 max-w-2xl mx-auto">
+            Simple, efectivo y diseñado para motivar el aprendizaje
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <!-- Step 1 -->
+          <div class="text-center" data-aos="fade-up" data-aos-delay="100">
+            <div class="relative mb-6">
+              <div
+                class="w-20 h-20 bg-gradient-to-br from-purple-600 to-blue-500 rounded-full flex items-center justify-center mx-auto"
+              >
+                <span class="text-3xl font-bold text-white">1</span>
+              </div>
+              <div
+                class="hidden lg:block absolute top-10 left-full w-full h-0.5 bg-gradient-to-r from-purple-600 to-transparent"
+              ></div>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-3">Regístrate</h3>
+            <p class="text-slate-600">
+              Crea tu cuenta como estudiante con un código de acceso
+              proporcionado por tu maestro
+            </p>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="text-center" data-aos="fade-up" data-aos-delay="200">
+            <div class="relative mb-6">
+              <div
+                class="w-20 h-20 bg-gradient-to-br from-emerald-600 to-teal-500 rounded-full flex items-center justify-center mx-auto"
+              >
+                <span class="text-3xl font-bold text-white">2</span>
+              </div>
+              <div
+                class="hidden lg:block absolute top-10 left-full w-full h-0.5 bg-gradient-to-r from-emerald-600 to-transparent"
+              ></div>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-3">
+              Completa Tareas
+            </h3>
+            <p class="text-slate-600">
+              Realiza las tareas asignadas, descarga material y sube tus
+              trabajos completados
+            </p>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="text-center" data-aos="fade-up" data-aos-delay="300">
+            <div class="relative mb-6">
+              <div
+                class="w-20 h-20 bg-gradient-to-br from-amber-600 to-orange-500 rounded-full flex items-center justify-center mx-auto"
+              >
+                <span class="text-3xl font-bold text-white">3</span>
+              </div>
+              <div
+                class="hidden lg:block absolute top-10 left-full w-full h-0.5 bg-gradient-to-r from-amber-600 to-transparent"
+              ></div>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-3">
+              Gana CCED Coins
+            </h3>
+            <p class="text-slate-600">
+              Recibe monedas digitales como recompensa por cada tarea completada
+              exitosamente
+            </p>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="text-center" data-aos="fade-up" data-aos-delay="400">
+            <div class="relative mb-6">
+              <div
+                class="w-20 h-20 bg-gradient-to-br from-pink-600 to-rose-500 rounded-full flex items-center justify-center mx-auto"
+              >
+                <span class="text-3xl font-bold text-white">4</span>
+              </div>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-3">
+              Compite y Progresa
+            </h3>
+            <p class="text-slate-600">
+              Sube en el ranking, compite con tus compañeros y alcanza tus metas
+              educativas
+            </p>
+          </div>
+        </div>
+
+        <!-- CTA Button -->
+        <div class="text-center mt-12" data-aos="fade-up">
+          <a
+            href="register.html"
+            class="inline-block px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-500 text-white rounded-xl font-semibold hover:shadow-2xl transition-all transform hover:scale-105"
+          >
+            <span class="flex items-center gap-2">
+              <i data-lucide="rocket" class="w-5 h-5"></i>
+              Comenzar Ahora - Es Gratis
+            </span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 bg-white">
+      <div
+        class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
+        data-aos="fade-up"
+      >
+        <div
+          class="bg-gradient-to-r from-purple-600 to-blue-500 rounded-3xl p-12 relative overflow-hidden"
+        >
+          <!-- Decorative circles -->
+          <div
+            class="absolute top-0 left-0 w-40 h-40 bg-white/10 rounded-full -translate-x-1/2 -translate-y-1/2"
+          ></div>
+          <div
+            class="absolute bottom-0 right-0 w-60 h-60 bg-white/10 rounded-full translate-x-1/3 translate-y-1/3"
+          ></div>
+
+          <div class="relative z-10">
+            <h2 class="text-4xl font-bold text-white mb-4">
+              ¿Listo para Transformar tu Educación?
+            </h2>
+            <p class="text-xl text-purple-100 mb-8 max-w-2xl mx-auto">
+              Únete a cientos de estudiantes que ya están mejorando su
+              rendimiento académico con CCED Coin
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+              <a
+                href="register.html"
+                class="px-8 py-4 bg-white text-purple-600 rounded-xl font-semibold hover:shadow-2xl transition-all transform hover:scale-105"
+              >
+                Crear Cuenta Gratis
+              </a>
+              <a
+                href="login.html"
+                class="px-8 py-4 border-2 border-white text-white rounded-xl font-semibold hover:bg-white hover:text-purple-600 transition-all"
+              >
+                Ya Tengo Cuenta
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-300 py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <!-- Brand -->
+          <div class="col-span-1 md:col-span-2">
+            <div class="flex items-center space-x-3 mb-4">
+              <div
+                class="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-500 rounded-xl flex items-center justify-center"
+              >
+                <i data-lucide="coins" class="w-6 h-6 text-white"></i>
+              </div>
+              <span class="text-2xl font-bold text-white">CCED Coin</span>
+            </div>
+            <p class="text-slate-400 mb-4">
+              Sistema innovador de recompensas educativas que motiva a los
+              estudiantes a través de monedas digitales.
+            </p>
+            <div class="flex space-x-4">
+              <a
+                href="#"
+                class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors"
+              >
+                <i data-lucide="facebook" class="w-5 h-5"></i>
+              </a>
+              <a
+                href="#"
+                class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors"
+              >
+                <i data-lucide="twitter" class="w-5 h-5"></i>
+              </a>
+              <a
+                href="#"
+                class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors"
+              >
+                <i data-lucide="instagram" class="w-5 h-5"></i>
+              </a>
+              <a
+                href="#"
+                class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors"
+              >
+                <i data-lucide="linkedin" class="w-5 h-5"></i>
+              </a>
+            </div>
+          </div>
+
+          <!-- Links -->
+          <div>
+            <h4 class="text-white font-semibold mb-4">Enlaces Rápidos</h4>
+            <ul class="space-y-2">
+              <li>
+                <a
+                  href="#inicio"
+                  class="hover:text-purple-400 transition-colors"
+                  >Inicio</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#caracteristicas"
+                  class="hover:text-purple-400 transition-colors"
+                  >Características</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#estadisticas"
+                  class="hover:text-purple-400 transition-colors"
+                  >Estadísticas</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#como-funciona"
+                  class="hover:text-purple-400 transition-colors"
+                  >¿Cómo Funciona?</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <!-- Support -->
+          <div>
+            <h4 class="text-white font-semibold mb-4">Soporte</h4>
+            <ul class="space-y-2">
+              <li>
+                <a href="#" class="hover:text-purple-400 transition-colors"
+                  >Centro de Ayuda</a
+                >
+              </li>
+              <li>
+                <a href="#" class="hover:text-purple-400 transition-colors"
+                  >Documentación</a
+                >
+              </li>
+              <li>
+                <a href="#" class="hover:text-purple-400 transition-colors"
+                  >Contacto</a
+                >
+              </li>
+              <li>
+                <a href="#" class="hover:text-purple-400 transition-colors"
+                  >Términos y Condiciones</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div
+          class="border-t border-slate-800 mt-8 pt-8 text-center text-slate-400"
+        >
+          <p>&copy; 2025 CCED Coin. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="assets/js/index/landing.js"></script>
+    <script>
+      // Initialize Lucide Icons
+      lucide.createIcons();
+
+      // Initialize AOS
+      AOS.init({
+        duration: 800,
+        once: true,
+        offset: 100,
+      });
+
+      // Mobile Menu Toggle
+      const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+      const mobileMenu = document.getElementById("mobileMenu");
+
+      mobileMenuBtn.addEventListener("click", () => {
+        mobileMenu.classList.toggle("hidden");
+      });
+
+      // Smooth Scroll
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener("click", function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute("href"));
+          if (target) {
+            target.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+            mobileMenu.classList.add("hidden");
+          }
+        });
+      });
+    </script>
   </body>
 </html>

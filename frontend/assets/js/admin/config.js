@@ -5,7 +5,11 @@
 export const CONFIG = {
   API_URL: "http://localhost:4000/api",
   STORAGE_KEYS: {
+    // ✅ CRÍTICO: Debe coincidir con lo que guarda login.js
     ADMIN_TOKEN: "adminToken",
+    ADMIN_DATA: "adminData",
+    STUDENT_TOKEN: "studentToken",
+    STUDENT_DATA: "studentData",
   },
   NOTIFICATION_DURATION: 3000,
   CHART_COLORS: {
@@ -17,9 +21,10 @@ export const CONFIG = {
   },
 };
 
+// ✅ Rutas relativas desde views/
 export const ROUTES = {
-  LOGIN: "login.html",
-  HOME: "../../../../frontend/index.html",
+  LOGIN: "./login.html",
+  HOME: "../index.html",
 };
 
 export const NOTIFICATION_TYPES = {

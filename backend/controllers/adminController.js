@@ -511,6 +511,16 @@ exports.updateTask = async (req, res) => {
       estado,
     } = req.body;
 
+    // Verificar que la tarea existe
+    const existingTask = await query("SELECT id FROM tasks WHERE id = ?", [id]);
+
+    if (existingTask.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Tarea no encontrada",
+      });
+    }
+
     let updates = [];
     let values = [];
 
@@ -522,9 +532,9 @@ exports.updateTask = async (req, res) => {
       updates.push("descripcion = ?");
       values.push(descripcion);
     }
-    if (recompensa) {
+    if (recompensa !== undefined) {
       updates.push("recompensa = ?");
-      values.push(recompensa);
+      values.push(parseFloat(recompensa));
     }
     if (fecha_limite !== undefined) {
       updates.push("fecha_limite = ?");
@@ -540,21 +550,26 @@ exports.updateTask = async (req, res) => {
     }
 
     if (updates.length === 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No hay datos para actualizar" });
+      return res.status(400).json({
+        success: false,
+        message: "No hay datos para actualizar",
+      });
     }
 
     values.push(id);
 
     await query(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`, values);
 
-    res.json({ success: true, message: "Tarea actualizada exitosamente" });
+    res.json({
+      success: true,
+      message: "Tarea actualizada exitosamente",
+    });
   } catch (error) {
     console.error("Error al actualizar tarea:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Error al actualizar tarea" });
+    res.status(500).json({
+      success: false,
+      message: "Error al actualizar tarea",
+    });
   }
 };
 

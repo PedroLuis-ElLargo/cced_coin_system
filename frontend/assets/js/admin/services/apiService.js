@@ -79,6 +79,12 @@ class ApiService {
       body: JSON.stringify(taskData),
     });
   }
+  async updateTask(id, taskData) {
+    return this.request(`/admin/tasks/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(taskData),
+    });
+  }
 
   async deleteTask(id) {
     return this.request(`/admin/tasks/${id}`, {

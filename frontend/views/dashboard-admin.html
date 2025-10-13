@@ -174,8 +174,10 @@
                 />
                 <span
                   class="hidden md:inline text-sm font-medium text-slate-700"
-                  >Prof. Admin</span
+                  data-user-name
                 >
+                  Cargando...
+                </span>
                 <i
                   data-lucide="chevron-down"
                   class="h-4 w-4 text-slate-400 hidden md:inline"
@@ -203,6 +205,7 @@
                 <a
                   href="#"
                   id="logoutButton"
+                  data-logout
                   class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-red-50 hover:text-red-600"
                 >
                   <i data-lucide="log-out" class="w-4 h-4 mr-2"></i>Cerrar
@@ -720,8 +723,6 @@
       </div>
     </div>
 
-    <!-- Solo incluimos el archivo JavaScript externo -->
-    <!-- <script src="../assets/js/admin/admin.js"></script> -->
     <script type="module" src="../assets/js/admin/app.js"></script>
   </body>
 </html>

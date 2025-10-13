@@ -24,8 +24,6 @@ const pool = mysql.createPool({
 const initializeDatabase = async () => {
   try {
     const connection = await pool.getConnection();
-    console.log("✅ Conexión exitosa a MySQL");
-
     // Verificar que las tablas existan
     const [tables] = await connection.execute(
       `
@@ -35,8 +33,6 @@ const initializeDatabase = async () => {
         `,
       [process.env.DB_NAME || "cced_coin_system"]
     );
-
-    console.log(`📊 Base de datos cargada con ${tables.length} tablas`);
     connection.release();
     return true;
   } catch (err) {

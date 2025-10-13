@@ -37,6 +37,9 @@ class App {
       // Inicializar módulos
       this.initializeModules();
 
+      // Configurar logout
+      this.setupLogout();
+
       // Cargar dashboard inicial
       await dashboardModule.loadStats();
 
@@ -44,8 +47,6 @@ class App {
       this.exposeGlobalMethods();
 
       this.isInitialized = true;
-
-      console.log("✅ Aplicación inicializada correctamente");
     } catch (error) {
       console.error("❌ Error inicializando aplicación:", error);
     }
@@ -62,6 +63,20 @@ class App {
     modalHandler.init();
   }
 
+  setupLogout() {
+    // Configurar todos los botones de logout
+    const logoutButtons = document.querySelectorAll(
+      "[data-logout], #logoutButton"
+    );
+
+    logoutButtons.forEach((button) => {
+      button.addEventListener("click", (e) => {
+        e.preventDefault();
+        authService.logout();
+      });
+    });
+  }
+
   exposeGlobalMethods() {
     // Exponer módulos necesarios para onclick handlers
     window.studentsModule = studentsModule;
@@ -70,6 +85,9 @@ class App {
 
     // Exponer navegación
     window.navigateTo = (section) => navigationModule.navigateTo(section);
+
+    // Exponer logout
+    window.logout = () => authService.logout();
   }
 }
 

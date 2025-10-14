@@ -37,19 +37,19 @@ class TasksModule {
         <!-- Filtros de estado -->
         <div class="bg-white p-4 rounded-xl shadow-lg">
           <div class="flex flex-wrap gap-2">
-            <button onclick="window.tasksModule.applyFilter('all')" class="filter-task-btn px-4 py-2 rounded-lg text-sm transition-colors bg-emerald-500 text-white" data-filter="all">
+            <button class="filter-task-btn px-4 py-2 rounded-lg text-sm transition-colors bg-emerald-500 text-white" data-filter="all">
               <i data-lucide="clipboard-list" class="w-4 h-4 inline mr-1"></i>
               Todas
             </button>
-            <button onclick="window.tasksModule.applyFilter('active')" class="filter-task-btn px-4 py-2 rounded-lg text-sm transition-colors bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="active">
+            <button class="filter-task-btn px-4 py-2 rounded-lg text-sm transition-colors bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="active">
               <i data-lucide="check-circle" class="w-4 h-4 inline mr-1"></i>
               Activas
             </button>
-            <button onclick="window.tasksModule.applyFilter('expired')" class="filter-task-btn px-4 py-2 rounded-lg text-sm transition-colors bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="vencida">
+            <button class="filter-task-btn px-4 py-2 rounded-lg text-sm transition-colors bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="vencida">
               <i data-lucide="x-circle" class="w-4 h-4 inline mr-1"></i>
               Vencidas
             </button>
-            <button onclick="window.tasksModule.applyFilter('high-reward')" class="filter-task-btn px-4 py-2 rounded-lg text-sm transition-colors bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="high-reward">
+            <button class="filter-task-btn px-4 py-2 rounded-lg text-sm transition-colors bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="high-reward">
               <i data-lucide="trophy" class="w-4 h-4 inline mr-1"></i>
               Alta Recompensa (>100)
             </button>
@@ -71,7 +71,7 @@ class TasksModule {
           <div class="p-6 border-b border-slate-200">
             <div class="flex justify-between items-center">
               <h2 class="text-2xl font-bold text-slate-800">Detalles de la Tarea</h2>
-              <button onclick="window.tasksModule.closeViewModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+              <button id="closeViewTaskModalBtn" class="text-slate-400 hover:text-slate-600 transition-colors">
                 <i data-lucide="x" class="w-6 h-6"></i>
               </button>
             </div>
@@ -88,7 +88,7 @@ class TasksModule {
           <div class="p-6 border-b border-slate-200">
             <div class="flex justify-between items-center">
               <h2 class="text-2xl font-bold text-slate-800">Editar Tarea</h2>
-              <button onclick="window.tasksModule.closeEditModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+              <button id="closeEditTaskModalBtn" class="text-slate-400 hover:text-slate-600 transition-colors">
                 <i data-lucide="x" class="w-6 h-6"></i>
               </button>
             </div>
@@ -119,7 +119,7 @@ class TasksModule {
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Recompensa (CCED)</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Recompensa (STHELA)</label>
                 <input
                   type="number"
                   id="editTaskReward"
@@ -169,7 +169,7 @@ class TasksModule {
             <div class="flex justify-end gap-3 pt-4">
               <button
                 type="button"
-                onclick="window.tasksModule.closeEditModal()"
+                id="cancelEditTaskBtn"
                 class="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 Cancelar
@@ -200,13 +200,13 @@ class TasksModule {
             </div>
             <div class="flex gap-3">
               <button
-                onclick="window.tasksModule.closeDeleteModal()"
+                id="cancelDeleteTaskBtn"
                 class="flex-1 px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 Cancelar
               </button>
               <button
-                onclick="window.tasksModule.confirmDelete()"
+                id="confirmDeleteTaskBtn"
                 class="flex-1 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
               >
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -222,6 +222,7 @@ class TasksModule {
     this.loadData();
     this.initSearch();
     this.initEditForm();
+    this.setupEventListeners();
   }
 
   async loadData() {
@@ -328,28 +329,92 @@ class TasksModule {
         <div class="flex items-center justify-between pt-4 border-t border-slate-100">
           <span class="flex items-center text-amber-600 font-semibold">
             <i data-lucide="coins" class="w-4 h-4 mr-1"></i>
-            ${task.recompensa} CCED
+            ${task.recompensa} STHELA
           </span>
           <div class="flex gap-2">
-            <button onclick="window.tasksModule.view(${
+            <button data-action="view" data-id="${
               task.id
-            })" class="p-2 text-sky-600 hover:bg-sky-50 rounded-lg" title="Ver detalles">
+            }" class="p-2 text-sky-600 hover:bg-sky-50 rounded-lg" title="Ver detalles">
               <i data-lucide="eye" class="w-4 h-4"></i>
             </button>
-            <button onclick="window.tasksModule.edit(${
+            <button data-action="edit" data-id="${
               task.id
-            })" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg" title="Editar">
+            }" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg" title="Editar">
               <i data-lucide="edit" class="w-4 h-4"></i>
             </button>
-            <button onclick="window.tasksModule.delete(${
+            <button data-action="delete" data-id="${
               task.id
-            })" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Eliminar">
+            }" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Eliminar">
               <i data-lucide="trash-2" class="w-4 h-4"></i>
             </button>
           </div>
         </div>
       </div>
     `;
+  }
+
+  // ==========================================
+  // CONFIGURAR EVENT LISTENERS
+  // ==========================================
+  setupEventListeners() {
+    // Filters
+    const filtersContainer =
+      document.querySelector(".filter-task-btn")?.parentElement;
+    // Instead of relying on finding parent, attach to document and filter by dataset
+    document.addEventListener("click", (e) => {
+      const fbtn = e.target.closest("button[data-filter]");
+      if (fbtn) {
+        const filter = fbtn.getAttribute("data-filter");
+        this.applyFilter(filter);
+      }
+    });
+
+    // Delegate actions in tasks grid
+    const grid = document.getElementById("tasksGrid");
+    if (grid) {
+      grid.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+        const action = btn.getAttribute("data-action");
+        const id = btn.getAttribute("data-id");
+        if (action === "view") this.view(Number(id));
+        else if (action === "edit") this.edit(Number(id));
+        else if (action === "delete") this.delete(Number(id));
+      });
+    }
+
+    // Modal buttons
+    const closeViewBtn = document.getElementById("closeViewTaskModalBtn");
+    if (closeViewBtn)
+      closeViewBtn.addEventListener("click", () => this.closeViewModal());
+
+    const closeEditBtn = document.getElementById("closeEditTaskModalBtn");
+    if (closeEditBtn)
+      closeEditBtn.addEventListener("click", () => this.closeEditModal());
+
+    const cancelEditBtn = document.getElementById("cancelEditTaskBtn");
+    if (cancelEditBtn)
+      cancelEditBtn.addEventListener("click", () => this.closeEditModal());
+
+    const cancelDeleteBtn = document.getElementById("cancelDeleteTaskBtn");
+    if (cancelDeleteBtn)
+      cancelDeleteBtn.addEventListener("click", () => this.closeDeleteModal());
+
+    const confirmDeleteBtn = document.getElementById("confirmDeleteTaskBtn");
+    if (confirmDeleteBtn)
+      confirmDeleteBtn.addEventListener("click", () => this.confirmDelete());
+
+    // Actions inside view modal
+    const viewContent = document.getElementById("viewTaskContent");
+    if (viewContent) {
+      viewContent.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+        const action = btn.getAttribute("data-action");
+        const id = btn.getAttribute("data-id");
+        if (action === "edit-from-view") this.edit(Number(id));
+      });
+    }
   }
 
   initSearch() {
@@ -393,7 +458,7 @@ class TasksModule {
       case "completed":
         filteredTasks = this.allTasks.filter((t) => t.estado === "completada");
         break;
-      case "expired":
+      case "vencida":
         filteredTasks = this.allTasks.filter((t) => t.estado === "vencida");
         break;
       case "high-reward":
@@ -467,7 +532,7 @@ class TasksModule {
                 <p class="text-3xl font-bold text-amber-600">${
                   task.recompensa
                 }</p>
-                <p class="text-xs text-amber-700">CCED Coins</p>
+                <p class="text-xs text-amber-700">STHELA Coins</p>
               </div>
               <div class="w-14 h-14 bg-amber-200 rounded-full flex items-center justify-center">
                 <i data-lucide="coins" class="w-7 h-7 text-amber-600"></i>
@@ -528,14 +593,15 @@ class TasksModule {
         <!-- Botones de acción -->
         <div class="flex gap-3">
           <button
-            onclick="window.tasksModule.edit(${id})"
+            data-action="edit-from-view"
+            data-id="${id}"
             class="flex-1 px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2"
           >
             <i data-lucide="edit" class="w-5 h-5"></i>
             Editar Tarea
           </button>
           <button
-            onclick="window.tasksModule.closeViewModal()"
+            id="closeViewTaskModalBtn"
             class="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
           >
             Cerrar
@@ -685,7 +751,7 @@ class TasksModule {
           </span>
           <span class="text-sm text-amber-600 font-semibold">
             <i data-lucide="coins" class="w-4 h-4 inline mr-1"></i>
-            ${task.recompensa} CCED
+            ${task.recompensa} STHELA
           </span>
         </div>
       </div>

@@ -188,7 +188,7 @@ async function loadPublicRanking() {
                 <div class="flex items-center gap-4 mt-2 text-sm text-slate-600">
                   <span class="flex items-center gap-1">
                     <i data-lucide="coins" class="w-4 h-4 text-amber-600"></i>
-                    ${student.balance.toLocaleString("es-ES")} CCED
+                    ${student.balance.toLocaleString("es-ES")} STHELA
                   </span>
                   <span class="flex items-center gap-1">
                     <i data-lucide="clipboard-check" class="w-4 h-4 text-emerald-600"></i>
@@ -240,7 +240,7 @@ function showErrorRanking(container) {
     <div class="text-center py-8 bg-red-50 rounded-lg">
       <i data-lucide="alert-circle" class="w-12 h-12 mx-auto mb-3 text-red-500"></i>
       <p class="text-red-600 font-medium">Error al cargar el ranking</p>
-      <button onclick="loadPublicRanking()" class="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+      <button id="retryPublicRankingBtn" class="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
         Reintentar
       </button>
     </div>
@@ -252,6 +252,18 @@ function showErrorRanking(container) {
 }
 
 // ==========================================
+// EVENT LISTENERS DE LA LANDING
+// ==========================================
+function setupLandingListeners() {
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('#retryPublicRankingBtn');
+    if (btn) {
+      loadPublicRanking();
+    }
+  });
+}
+
+// ==========================================
 // INICIALIZACIÓN
 // ==========================================
 
@@ -259,6 +271,8 @@ function initLandingPage() {
   // Cargar datos iniciales
   loadPublicStats();
   loadPublicRanking();
+
+  setupLandingListeners();
 
   // Actualizar estadísticas periódicamente
   if (statsInterval) {

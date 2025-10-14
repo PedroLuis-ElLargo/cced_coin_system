@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CCED Coin - Panel de Administración</title>
+    <title>STHELA Coin - Panel de Administración</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
@@ -25,7 +25,7 @@
           <a href="#" class="flex items-center space-x-2">
             <i data-lucide="graduation-cap" class="h-8 w-8 text-sky-500"></i>
             <span id="sidebarLogoText" class="text-xl font-semibold"
-              >CCED Coin</span
+              >STHELA Coin</span
             >
           </a>
         </div>
@@ -274,7 +274,7 @@
               </div>
               <div>
                 <p class="text-xs sm:text-sm text-slate-500">
-                  CCED Coins Circulando
+                  STHELA Coins Circulando
                 </p>
                 <p
                   class="text-xl sm:text-2xl font-semibold text-slate-800"
@@ -367,7 +367,7 @@
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 bg-white p-4 sm:p-6 rounded-xl shadow-lg">
               <h3 class="text-lg sm:text-xl font-semibold text-slate-700 mb-4">
-                Distribución de CCED Coins
+                Distribución de STHELA Coins
               </h3>
               <div class="h-80 md:h-96">
                 <canvas id="coinsDistributionChart"></canvas>
@@ -403,7 +403,7 @@
                       <span class="font-semibold text-sky-600"
                         >"Álgebra Básica"</span
                       >
-                      y ganó 25 CCED Coins
+                      y ganó 25 STHELA Coins
                     </p>
                     <p class="text-xs text-slate-400">Hace 2 minutos</p>
                   </div>
@@ -435,7 +435,7 @@
                   <div>
                     <p class="text-sm text-slate-700">
                       Carlos Rodríguez compró 2 puntos para el examen de
-                      Matemáticas por 20 CCED Coins
+                      Matemáticas por 20 STHELA Coins
                     </p>
                     <p class="text-xs text-slate-400">Hace 1 hora</p>
                   </div>
@@ -452,7 +452,7 @@
                     <p class="text-sm text-slate-700">
                       Nueva tarea publicada:
                       <span class="font-semibold">"Proyecto de Ciencias"</span>
-                      - Recompensa: 50 CCED Coins
+                      - Recompensa: 50 STHELA Coins
                     </p>
                     <p class="text-xs text-slate-400">Hace 3 horas</p>
                   </div>
@@ -510,7 +510,7 @@
               id="studentEmail"
               name="studentEmail"
               class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
-              placeholder="Ej: maria@cced.edu"
+              placeholder="Ej: maria@STHELA.edu"
             />
           </div>
           <div>
@@ -603,7 +603,7 @@
               <label
                 for="taskReward"
                 class="block text-sm font-medium text-slate-700 mb-1"
-                >Recompensa (CCED Coins)</label
+                >Recompensa (STHELA Coins)</label
               >
               <input
                 type="number"
@@ -692,7 +692,7 @@
               <code
                 id="generatedCode"
                 class="text-lg font-mono font-bold text-purple-600"
-                >CCED-2024-XXXX</code
+                >STHELA-2024-XXXX</code
               >
               <button
                 type="button"
@@ -723,6 +723,14 @@
       </div>
     </div>
 
+    <script>
+      // Small runtime check: if monedasModule isn't exposed by the app, warn in console
+      setTimeout(() => {
+        if (!window.monedasModule) {
+          console.warn('Advertencia: window.monedasModule no está expuesto. Si ves esto, asegúrate de que `app.js` inicialice y exponga el módulo correctamente.');
+        }
+      }, 2000);
+    </script>
     <script type="module" src="../assets/js/admin/app.js"></script>
   </body>
 </html>

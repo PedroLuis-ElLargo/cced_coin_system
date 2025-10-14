@@ -42,19 +42,19 @@ class StudentsModule {
         <!-- Filtros desplegables -->
         <div id="filtersContainer" class="hidden bg-white p-4 rounded-xl shadow-lg">
           <div class="flex flex-wrap gap-2">
-            <button onclick="window.studentsModule.applyFilter('all')" class="filter-btn px-4 py-2 rounded-lg text-sm transition-colors bg-sky-500 text-white" data-filter="all">
+            <button class="filter-btn px-4 py-2 rounded-lg text-sm transition-colors bg-sky-500 text-white" data-filter="all">
               Todos
             </button>
-            <button onclick="window.studentsModule.applyFilter('high-balance')" class="filter-btn px-4 py-2 rounded-lg text-sm transition-colors bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="high-balance">
+            <button class="filter-btn px-4 py-2 rounded-lg text-sm transition-colors bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="high-balance">
               Alto Balance (>100)
             </button>
-            <button onclick="window.studentsModule.applyFilter('low-balance')" class="filter-btn px-4 py-2 rounded-lg text-sm transition-colors bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="low-balance">
+            <button class="filter-btn px-4 py-2 rounded-lg text-sm transition-colors bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="low-balance">
               Bajo Balance (<50)
             </button>
-            <button onclick="window.studentsModule.applyFilter('many-tasks')" class="filter-btn px-4 py-2 rounded-lg text-sm transition-colors bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="many-tasks">
+            <button class="filter-btn px-4 py-2 rounded-lg text-sm transition-colors bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="many-tasks">
               Muchas Tareas (>5)
             </button>
-            <button onclick="window.studentsModule.applyFilter('few-tasks')" class="filter-btn px-4 py-2 rounded-lg text-sm transition-colors bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="few-tasks">
+            <button class="filter-btn px-4 py-2 rounded-lg text-sm transition-colors bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="few-tasks">
               Pocas Tareas (<3)
             </button>
           </div>
@@ -92,7 +92,7 @@ class StudentsModule {
           <div class="p-6 border-b border-slate-200">
             <div class="flex justify-between items-center">
               <h2 class="text-2xl font-bold text-slate-800">Detalles del Estudiante</h2>
-              <button onclick="window.studentsModule.closeViewModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+              <button id="closeViewStudentModalBtn" class="text-slate-400 hover:text-slate-600 transition-colors">
                 <i data-lucide="x" class="w-6 h-6"></i>
               </button>
             </div>
@@ -109,7 +109,7 @@ class StudentsModule {
           <div class="p-6 border-b border-slate-200">
             <div class="flex justify-between items-center">
               <h2 class="text-2xl font-bold text-slate-800">Editar Estudiante</h2>
-              <button onclick="window.studentsModule.closeEditModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+              <button id="closeEditStudentModalBtn" class="text-slate-400 hover:text-slate-600 transition-colors">
                 <i data-lucide="x" class="w-6 h-6"></i>
               </button>
             </div>
@@ -166,7 +166,7 @@ class StudentsModule {
             <div class="flex justify-end gap-3 pt-4">
               <button
                 type="button"
-                onclick="window.studentsModule.closeEditModal()"
+                id="cancelEditStudentBtn"
                 class="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 Cancelar
@@ -197,13 +197,13 @@ class StudentsModule {
             </div>
             <div class="flex gap-3">
               <button
-                onclick="window.studentsModule.closeDeleteModal()"
+                id="cancelDeleteStudentBtn"
                 class="flex-1 px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 Cancelar
               </button>
               <button
-                onclick="window.studentsModule.confirmDelete()"
+                id="confirmDeleteStudentBtn"
                 class="flex-1 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
               >
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -220,6 +220,66 @@ class StudentsModule {
     this.initSearch();
     this.initFilterButton();
     this.initEditForm();
+    this.setupEventListeners();
+  }
+
+  // ==========================================
+  // CONFIGURAR EVENT LISTENERS
+  // ==========================================
+  setupEventListeners() {
+    // Filters (buttons inside filtersContainer)
+    const filtersContainer = document.getElementById('filtersContainer');
+    if (filtersContainer) {
+      filtersContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-filter]');
+        if (!btn) return;
+        const filter = btn.getAttribute('data-filter');
+        this.applyFilter(filter);
+      });
+    }
+
+    // Delegate actions in students table
+    const tbody = document.getElementById('studentsTableBody');
+    if (tbody) {
+      tbody.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const action = btn.getAttribute('data-action');
+        const id = btn.getAttribute('data-id');
+
+        if (action === 'view') this.view(Number(id));
+        else if (action === 'edit') this.edit(Number(id));
+        else if (action === 'delete') this.delete(Number(id));
+      });
+    }
+
+    // Modal close/cancel/confirm buttons
+    const closeViewBtn = document.getElementById('closeViewStudentModalBtn');
+    if (closeViewBtn) closeViewBtn.addEventListener('click', () => this.closeViewModal());
+
+    const closeEditBtn = document.getElementById('closeEditStudentModalBtn');
+    if (closeEditBtn) closeEditBtn.addEventListener('click', () => this.closeEditModal());
+
+    const cancelEditBtn = document.getElementById('cancelEditStudentBtn');
+    if (cancelEditBtn) cancelEditBtn.addEventListener('click', () => this.closeEditModal());
+
+    const cancelDeleteBtn = document.getElementById('cancelDeleteStudentBtn');
+    if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', () => this.closeDeleteModal());
+
+    const confirmDeleteBtn = document.getElementById('confirmDeleteStudentBtn');
+    if (confirmDeleteBtn) confirmDeleteBtn.addEventListener('click', () => this.confirmDelete());
+
+    // Actions inside the view modal (e.g., edit-from-view)
+    const viewContent = document.getElementById('viewStudentContent');
+    if (viewContent) {
+      viewContent.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const action = btn.getAttribute('data-action');
+        const id = btn.getAttribute('data-id');
+        if (action === 'edit-from-view') this.edit(Number(id));
+      });
+    }
   }
 
   async loadData() {
@@ -293,19 +353,13 @@ class StudentsModule {
         </td>
         <td class="px-4 py-3">
           <div class="flex gap-2">
-            <button onclick="window.studentsModule.view(${
-              student.id_estudiante
-            })" class="p-2 text-sky-600 hover:bg-sky-50 rounded-lg" title="Ver detalles">
+            <button data-action="view" data-id="${student.id_estudiante}" class="p-2 text-sky-600 hover:bg-sky-50 rounded-lg" title="Ver detalles">
               <i data-lucide="eye" class="w-4 h-4"></i>
             </button>
-            <button onclick="window.studentsModule.edit(${
-              student.id_estudiante
-            })" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg" title="Editar">
+            <button data-action="edit" data-id="${student.id_estudiante}" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg" title="Editar">
               <i data-lucide="edit" class="w-4 h-4"></i>
             </button>
-            <button onclick="window.studentsModule.delete(${
-              student.id_estudiante
-            })" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Eliminar">
+            <button data-action="delete" data-id="${student.id_estudiante}" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Eliminar">
               <i data-lucide="trash-2" class="w-4 h-4"></i>
             </button>
           </div>
@@ -461,14 +515,15 @@ class StudentsModule {
 
         <div class="flex gap-3">
           <button
-            onclick="window.studentsModule.edit(${id})"
+            data-action="edit-from-view"
+            data-id="${id}"
             class="flex-1 px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2"
           >
             <i data-lucide="edit" class="w-5 h-5"></i>
             Editar Estudiante
           </button>
           <button
-            onclick="window.studentsModule.closeViewModal()"
+            id="closeViewStudentModalBtn"
             class="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
           >
             Cerrar

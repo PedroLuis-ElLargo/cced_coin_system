@@ -28,6 +28,7 @@ class CodesModule {
 
     uiService.updateMainContent(content);
     this.loadData();
+    this.setupEventListeners();
   }
 
   async loadData() {
@@ -69,7 +70,7 @@ class CodesModule {
             <h3 class="text-xl font-semibold text-red-800 mb-2">Error al Cargar Códigos</h3>
             <p class="text-red-700 mb-4">${error.message}</p>
             <button 
-              onclick="window.codesModule.loadData()" 
+              id="retryLoadCodesBtn"
               class="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg"
             >
               <i data-lucide="refresh-cw" class="w-4 h-4 inline mr-2"></i>
@@ -110,7 +111,8 @@ class CodesModule {
         </div>
         <div class="mt-4 pt-4 border-t border-slate-100 flex gap-2">
           <button 
-            onclick="window.codesModule.copy('${code.codigo}')" 
+            data-action="copy"
+            data-code="${code.codigo}"
             class="flex-1 px-3 py-2 text-sm bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-lg transition-colors"
           >
             <i data-lucide="copy" class="w-4 h-4 inline mr-1"></i>
@@ -186,12 +188,52 @@ class CodesModule {
   renderDeactivateButton(codeId) {
     return `
       <button 
-        onclick="window.codesModule.deactivate(${codeId})" 
+        data-action="deactivate"
+        data-id="${codeId}"
         class="px-3 py-2 text-sm bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
       >
         <i data-lucide="x-circle" class="w-4 h-4 inline"></i>
       </button>
     `;
+  }
+
+  // ==========================================
+  // CONFIGURAR EVENT LISTENERS
+  // ==========================================
+  setupEventListeners() {
+    // Open generate modal buttons
+    const openGen = document.getElementById("openGenerateCodeModal");
+    if (openGen)
+      openGen.addEventListener("click", () =>
+        uiService.openModal("generateCodeModal")
+      );
+
+    const openGenEmpty = document.getElementById("openGenerateCodeModalEmpty");
+    if (openGenEmpty)
+      openGenEmpty.addEventListener("click", () =>
+        uiService.openModal("generateCodeModal")
+      );
+
+    // Retry load
+    const retryBtn = document.getElementById("retryLoadCodesBtn");
+    if (retryBtn) retryBtn.addEventListener("click", () => this.loadData());
+
+    // Delegate copy/deactivate actions
+    const container = document.getElementById("codesContainer");
+    if (container) {
+      container.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+        const action = btn.getAttribute("data-action");
+        if (action === "copy") {
+          const code = btn.getAttribute("data-code");
+          this.copy(code);
+        } else if (action === "deactivate") {
+          const id = btn.getAttribute("data-id");
+          this.deactivate(Number(id));
+        }
+      });
+    }
   }
 
   copy(code) {

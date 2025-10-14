@@ -10,6 +10,7 @@ import uiInteractions from "./core/uiInteractions.js";
 import studentsModule from "./modules/studentsModule.js";
 import tasksModule from "./modules/tasksModule.js";
 import codesModule from "./modules/codesModule.js";
+import monedasModule from "./modules/monedasModule.js";
 
 class App {
   constructor() {
@@ -82,6 +83,7 @@ class App {
     window.studentsModule = studentsModule;
     window.tasksModule = tasksModule;
     window.codesModule = codesModule;
+    window.monedasModule = monedasModule;
 
     // Exponer navegación
     window.navigateTo = (section) => navigationModule.navigateTo(section);

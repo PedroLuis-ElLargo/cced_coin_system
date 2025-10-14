@@ -25,7 +25,7 @@ class ChartService {
         labels: top5.map((s) => s.nombre),
         datasets: [
           {
-            label: "CCED Coins",
+            label: "STHELA Coins",
             data: top5.map((s) => s.balance),
             backgroundColor: "rgba(245, 158, 11, 0.2)",
             borderColor: "rgba(245, 158, 11, 1)",
@@ -49,7 +49,7 @@ class ChartService {
             beginAtZero: true,
             ticks: {
               callback: function (value) {
-                return value + " CCED";
+                return value + " STHELA";
               },
             },
           },

@@ -60,21 +60,21 @@ class MonedasModule {
           <h3 class="text-lg font-semibold text-slate-700 mb-4">Gestión de Monedas</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button 
-              onclick="window.monedasModule.openAddCoinsModal()"
+              id="openAddCoinsBtn"
               class="p-4 border-2 border-dashed border-slate-300 rounded-lg hover:border-sky-500 hover:bg-sky-50 transition-colors"
             >
               <i data-lucide="plus-circle" class="w-8 h-8 mx-auto mb-2 text-sky-600"></i>
               <p class="text-sm font-medium text-slate-600">Agregar Monedas</p>
             </button>
             <button 
-              onclick="window.monedasModule.openRemoveCoinsModal()"
+              id="openRemoveCoinsBtn"
               class="p-4 border-2 border-dashed border-slate-300 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors"
             >
               <i data-lucide="minus-circle" class="w-8 h-8 mx-auto mb-2 text-red-600"></i>
               <p class="text-sm font-medium text-slate-600">Retirar Monedas</p>
             </button>
             <button 
-              onclick="window.monedasModule.loadTransactions()"
+              id="loadTransactionsBtn"
               class="p-4 border-2 border-dashed border-slate-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors"
             >
               <i data-lucide="history" class="w-8 h-8 mx-auto mb-2 text-purple-600"></i>
@@ -88,7 +88,7 @@ class MonedasModule {
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-semibold text-slate-700">Top 10 - Más Monedas</h3>
             <button 
-              onclick="window.monedasModule.loadStats()"
+              id="refreshMonedasStatsBtn"
               class="text-sky-600 hover:text-sky-700 text-sm font-medium"
             >
               <i data-lucide="refresh-cw" class="w-4 h-4 inline"></i> Actualizar
@@ -100,7 +100,7 @@ class MonedasModule {
                 <tr>
                   <th class="px-4 py-3 text-left">Posición</th>
                   <th class="px-4 py-3 text-left">Estudiante</th>
-                  <th class="px-4 py-3 text-right">CCED Coins</th>
+                  <th class="px-4 py-3 text-right">STHELA Coins</th>
                   <th class="px-4 py-3 text-right">Tareas</th>
                   <th class="px-4 py-3 text-center">Acciones</th>
                 </tr>
@@ -122,7 +122,7 @@ class MonedasModule {
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-semibold text-slate-700">Historial de Transacciones</h3>
             <button 
-              onclick="document.getElementById('transactionsSection').classList.add('hidden')"
+              id="closeTransactionsSectionBtn"
               class="text-slate-400 hover:text-slate-600"
             >
               <i data-lucide="x" class="w-5 h-5"></i>
@@ -155,7 +155,7 @@ class MonedasModule {
               <i data-lucide="plus-circle" class="w-6 h-6 mr-2 text-sky-600"></i>
               Agregar Monedas
             </h2>
-            <button onclick="window.monedasModule.closeModal('addCoinsModal')" class="text-slate-400 hover:text-slate-600">
+            <button id="closeAddCoinsModalBtn" class="text-slate-400 hover:text-slate-600">
               <i data-lucide="x" class="w-6 h-6"></i>
             </button>
           </div>
@@ -194,7 +194,7 @@ class MonedasModule {
             <div class="flex justify-end space-x-3 pt-2">
               <button 
                 type="button"
-                onclick="window.monedasModule.closeModal('addCoinsModal')"
+                id="cancelAddCoinsBtn"
                 class="px-4 py-2 text-sm font-medium rounded-md bg-slate-200 text-slate-700 hover:bg-slate-300"
               >
                 Cancelar
@@ -218,7 +218,7 @@ class MonedasModule {
               <i data-lucide="minus-circle" class="w-6 h-6 mr-2 text-red-600"></i>
               Retirar Monedas
             </h2>
-            <button onclick="window.monedasModule.closeModal('removeCoinsModal')" class="text-slate-400 hover:text-slate-600">
+            <button id="closeRemoveCoinsModalBtn" class="text-slate-400 hover:text-slate-600">
               <i data-lucide="x" class="w-6 h-6"></i>
             </button>
           </div>
@@ -233,7 +233,7 @@ class MonedasModule {
                 <option value="">Selecciona un estudiante</option>
               </select>
               <p class="text-xs text-slate-500 mt-1">
-                Balance actual: <span id="currentBalance" class="font-semibold">0</span> CCED
+                Balance actual: <span id="currentBalance" class="font-semibold">0</span> STHELA
               </p>
             </div>
             <div>
@@ -260,7 +260,7 @@ class MonedasModule {
             <div class="flex justify-end space-x-3 pt-2">
               <button 
                 type="button"
-                onclick="window.monedasModule.closeModal('removeCoinsModal')"
+                id="cancelRemoveCoinsBtn"
                 class="px-4 py-2 text-sm font-medium rounded-md bg-slate-200 text-slate-700 hover:bg-slate-300"
               >
                 Cancelar
@@ -381,26 +381,27 @@ class MonedasModule {
             </td>
             <td class="px-4 py-3 text-right">
               <span class="font-semibold text-amber-600">
-                ${Math.floor(student.balance).toLocaleString("es-ES")} CCED
+                ${Math.floor(student.balance).toLocaleString("es-ES")} STHELA
               </span>
             </td>
             <td class="px-4 py-3 text-right text-slate-600">
               ${student.tareas_completadas || 0}
             </td>
             <td class="px-4 py-3 text-center">
-              <button 
-                onclick="window.monedasModule.quickAddCoins(${student.id}, '${
-          student.nombre
-        }')"
+              <button
+                data-action="quick-add"
+                data-id="${student.id}"
+                data-name="${student.nombre}"
                 class="text-sky-600 hover:text-sky-700 mr-2"
                 title="Agregar monedas"
               >
                 <i data-lucide="plus-circle" class="w-4 h-4"></i>
               </button>
-              <button 
-                onclick="window.monedasModule.quickRemoveCoins(${
-                  student.id
-                }, '${student.nombre}', ${student.balance})"
+              <button
+                data-action="quick-remove"
+                data-id="${student.id}"
+                data-name="${student.nombre}"
+                data-balance="${student.balance}"
                 class="text-red-600 hover:text-red-700"
                 title="Retirar monedas"
               >
@@ -445,7 +446,7 @@ class MonedasModule {
         (s) =>
           `<option value="${s.id}">${s.nombre} (${Math.floor(
             s.balance
-          )} CCED)</option>`
+          )} STHELA)</option>`
       )
       .join("");
 
@@ -486,6 +487,54 @@ class MonedasModule {
           balanceEl.textContent = Math.floor(student.balance).toLocaleString(
             "es-ES"
           );
+        }
+      });
+    }
+
+    // Botones principales (no-inline)
+    const openAddBtn = document.getElementById("openAddCoinsBtn");
+    if (openAddBtn) openAddBtn.addEventListener("click", () => this.openAddCoinsModal());
+
+    const openRemoveBtn = document.getElementById("openRemoveCoinsBtn");
+    if (openRemoveBtn) openRemoveBtn.addEventListener("click", () => this.openRemoveCoinsModal());
+
+    const loadTxBtn = document.getElementById("loadTransactionsBtn");
+    if (loadTxBtn) loadTxBtn.addEventListener("click", () => this.loadTransactions());
+
+    const refreshBtn = document.getElementById("refreshMonedasStatsBtn");
+    if (refreshBtn) refreshBtn.addEventListener("click", () => this.loadStats());
+
+    const closeTxSectionBtn = document.getElementById("closeTransactionsSectionBtn");
+    if (closeTxSectionBtn) closeTxSectionBtn.addEventListener("click", () => document.getElementById('transactionsSection').classList.add('hidden'));
+
+    // Modal close / cancel buttons
+    const closeAddBtn = document.getElementById("closeAddCoinsModalBtn");
+    if (closeAddBtn) closeAddBtn.addEventListener("click", () => this.closeModal('addCoinsModal'));
+
+    const cancelAddBtn = document.getElementById("cancelAddCoinsBtn");
+    if (cancelAddBtn) cancelAddBtn.addEventListener("click", () => this.closeModal('addCoinsModal'));
+
+    const closeRemoveBtn = document.getElementById("closeRemoveCoinsModalBtn");
+    if (closeRemoveBtn) closeRemoveBtn.addEventListener("click", () => this.closeModal('removeCoinsModal'));
+
+    const cancelRemoveBtn = document.getElementById("cancelRemoveCoinsBtn");
+    if (cancelRemoveBtn) cancelRemoveBtn.addEventListener("click", () => this.closeModal('removeCoinsModal'));
+
+    // Delegated listener for quick actions in top students table
+    const topTable = document.getElementById('topStudentsTable');
+    if (topTable) {
+      topTable.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const action = btn.getAttribute('data-action');
+        const id = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name');
+        const balance = btn.getAttribute('data-balance');
+
+        if (action === 'quick-add') {
+          this.quickAddCoins(id, name);
+        } else if (action === 'quick-remove') {
+          this.quickRemoveCoins(id, name, parseFloat(balance));
         }
       });
     }
@@ -557,7 +606,7 @@ class MonedasModule {
 
       if (data.success) {
         uiService.showNotification(
-          `✅ Se agregaron ${amount} CCED Coins exitosamente`,
+          `✅ Se agregaron ${amount} STHELA Coins exitosamente`,
           NOTIFICATION_TYPES.SUCCESS
         );
         this.closeModal("addCoinsModal");
@@ -614,7 +663,7 @@ class MonedasModule {
 
       if (data.success) {
         uiService.showNotification(
-          `✅ Se retiraron ${amount} CCED Coins exitosamente`,
+          `✅ Se retiraron ${amount} STHELA Coins exitosamente`,
           NOTIFICATION_TYPES.SUCCESS
         );
         this.closeModal("removeCoinsModal");
@@ -725,7 +774,7 @@ class MonedasModule {
               </span>
             </td>
             <td class="px-4 py-3 text-right font-semibold ${typeColor}">
-              ${amount} CCED
+              ${amount} STHELA
             </td>
             <td class="px-4 py-3 text-sm text-slate-600">${t.motivo || "-"}</td>
           </tr>

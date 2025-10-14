@@ -201,9 +201,9 @@ if (registerForm) {
       return;
     }
 
-    if (!registrationCode.startsWith("CCED-")) {
+    if (!registrationCode.startsWith("STHELA-")) {
       showNotification(
-        "El código debe tener el formato CCED-XXXX-XXXX",
+        "El código debe tener el formato STHELA-XXXX-XXXX",
         "error"
       );
       return;

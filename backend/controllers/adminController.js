@@ -811,7 +811,7 @@ exports.addCoins = async (req, res) => {
       student_id,
     ]);
 
-    // Registrar transacción (usando campos: cantidad, descripcion, tipo='pago_admin')
+    // Registrar transacción
     await query(
       `INSERT INTO transactions (user_id, tipo, cantidad, descripcion, fecha) 
        VALUES (?, 'pago_admin', ?, ?, NOW())`,
@@ -824,17 +824,14 @@ exports.addCoins = async (req, res) => {
       [student_id]
     );
 
-    console.log(
-      `✅ Agregadas ${amount} monedas a ${student[0].nombre} - Nuevo balance: ${updatedStudent[0].balance}`
-    );
-
-    res.json({
+    const response = {
       success: true,
       message: `Se agregaron ${amount} CCED Coins a ${student[0].nombre}`,
       new_balance: parseFloat(updatedStudent[0].balance),
-    });
+    };
+
+    res.json(response);
   } catch (error) {
-    console.error("❌ Error agregando monedas:", error);
     res.status(500).json({
       success: false,
       message: "Error al agregar monedas",
@@ -899,10 +896,6 @@ exports.removeCoins = async (req, res) => {
     const updatedStudent = await query(
       "SELECT balance FROM users WHERE id = ?",
       [student_id]
-    );
-
-    console.log(
-      `✅ Retiradas ${amount} monedas de ${student[0].nombre} - Nuevo balance: ${updatedStudent[0].balance}`
     );
 
     res.json({
@@ -1115,10 +1108,6 @@ exports.transferCoins = async (req, res) => {
       [to_student_id, amount, `${transferReason} (recibido)`]
     );
 
-    console.log(
-      `✅ Transferencia: ${amount} monedas de ${fromStudent[0].nombre} a ${toStudent[0].nombre}`
-    );
-
     res.json({
       success: true,
       message: `Transferencia completada: ${amount} CCED Coins de ${fromStudent[0].nombre} a ${toStudent[0].nombre}`,
@@ -1176,10 +1165,6 @@ exports.adjustBalance = async (req, res) => {
         difference,
         reason || `Ajuste manual de balance (${oldBalance} → ${new_balance})`,
       ]
-    );
-
-    console.log(
-      `✅ Balance ajustado para ${student[0].nombre}: ${oldBalance} → ${new_balance}`
     );
 
     res.json({

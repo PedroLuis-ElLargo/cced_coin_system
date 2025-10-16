@@ -444,7 +444,7 @@ class MonedasModule {
     const options = this.students
       .map(
         (s) =>
-          `<option value="${s.id}">${s.nombre} (${Math.floor(
+          `<option value="${s.id_estudiante}">${s.nombre} (${Math.floor(
             s.balance
           )} STHELA)</option>`
       )
@@ -493,47 +493,70 @@ class MonedasModule {
 
     // Botones principales (no-inline)
     const openAddBtn = document.getElementById("openAddCoinsBtn");
-    if (openAddBtn) openAddBtn.addEventListener("click", () => this.openAddCoinsModal());
+    if (openAddBtn)
+      openAddBtn.addEventListener("click", () => this.openAddCoinsModal());
 
     const openRemoveBtn = document.getElementById("openRemoveCoinsBtn");
-    if (openRemoveBtn) openRemoveBtn.addEventListener("click", () => this.openRemoveCoinsModal());
+    if (openRemoveBtn)
+      openRemoveBtn.addEventListener("click", () =>
+        this.openRemoveCoinsModal()
+      );
 
     const loadTxBtn = document.getElementById("loadTransactionsBtn");
-    if (loadTxBtn) loadTxBtn.addEventListener("click", () => this.loadTransactions());
+    if (loadTxBtn)
+      loadTxBtn.addEventListener("click", () => this.loadTransactions());
 
     const refreshBtn = document.getElementById("refreshMonedasStatsBtn");
-    if (refreshBtn) refreshBtn.addEventListener("click", () => this.loadStats());
+    if (refreshBtn)
+      refreshBtn.addEventListener("click", () => this.loadStats());
 
-    const closeTxSectionBtn = document.getElementById("closeTransactionsSectionBtn");
-    if (closeTxSectionBtn) closeTxSectionBtn.addEventListener("click", () => document.getElementById('transactionsSection').classList.add('hidden'));
+    const closeTxSectionBtn = document.getElementById(
+      "closeTransactionsSectionBtn"
+    );
+    if (closeTxSectionBtn)
+      closeTxSectionBtn.addEventListener("click", () =>
+        document.getElementById("transactionsSection").classList.add("hidden")
+      );
 
     // Modal close / cancel buttons
     const closeAddBtn = document.getElementById("closeAddCoinsModalBtn");
-    if (closeAddBtn) closeAddBtn.addEventListener("click", () => this.closeModal('addCoinsModal'));
+    if (closeAddBtn)
+      closeAddBtn.addEventListener("click", () =>
+        this.closeModal("addCoinsModal")
+      );
 
     const cancelAddBtn = document.getElementById("cancelAddCoinsBtn");
-    if (cancelAddBtn) cancelAddBtn.addEventListener("click", () => this.closeModal('addCoinsModal'));
+    if (cancelAddBtn)
+      cancelAddBtn.addEventListener("click", () =>
+        this.closeModal("addCoinsModal")
+      );
 
     const closeRemoveBtn = document.getElementById("closeRemoveCoinsModalBtn");
-    if (closeRemoveBtn) closeRemoveBtn.addEventListener("click", () => this.closeModal('removeCoinsModal'));
+    if (closeRemoveBtn)
+      closeRemoveBtn.addEventListener("click", () =>
+        this.closeModal("removeCoinsModal")
+      );
 
     const cancelRemoveBtn = document.getElementById("cancelRemoveCoinsBtn");
-    if (cancelRemoveBtn) cancelRemoveBtn.addEventListener("click", () => this.closeModal('removeCoinsModal'));
+    if (cancelRemoveBtn)
+      cancelRemoveBtn.addEventListener("click", () =>
+        this.closeModal("removeCoinsModal")
+      );
 
     // Delegated listener for quick actions in top students table
-    const topTable = document.getElementById('topStudentsTable');
+    const topTable = document.getElementById("topStudentsTable");
     if (topTable) {
-      topTable.addEventListener('click', (e) => {
-        const btn = e.target.closest('button[data-action]');
+      topTable.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-action]");
         if (!btn) return;
-        const action = btn.getAttribute('data-action');
-        const id = btn.getAttribute('data-id');
-        const name = btn.getAttribute('data-name');
-        const balance = btn.getAttribute('data-balance');
+        const action = btn.getAttribute("data-action");
+        const id = btn.getAttribute("data-id");
+        const name = btn.getAttribute("data-name");
+        const balance = btn.getAttribute("data-balance");
 
-        if (action === 'quick-add') {
+        if (action === "quick-add") {
           this.quickAddCoins(id, name);
-        } else if (action === 'quick-remove') {
+        } else if (action === "quick-remove") {
           this.quickRemoveCoins(id, name, parseFloat(balance));
         }
       });
@@ -585,6 +608,8 @@ class MonedasModule {
   async handleAddCoins(e) {
     e.preventDefault();
 
+    const selectElement = document.getElementById("addCoinsStudent");
+
     const studentId = document.getElementById("addCoinsStudent").value;
     const amount = parseInt(document.getElementById("addCoinsAmount").value);
     const reason = document.getElementById("addCoinsReason").value;
@@ -606,7 +631,7 @@ class MonedasModule {
 
       if (data.success) {
         uiService.showNotification(
-          `✅ Se agregaron ${amount} STHELA Coins exitosamente`,
+          `✅ Se agregaron ${amount} CCED Coins exitosamente`,
           NOTIFICATION_TYPES.SUCCESS
         );
         this.closeModal("addCoinsModal");
@@ -619,7 +644,7 @@ class MonedasModule {
         );
       }
     } catch (error) {
-      console.error("Error agregando monedas:", error);
+      console.error("❌ Error agregando monedas:", error);
       uiService.showNotification(
         "Error al agregar monedas",
         NOTIFICATION_TYPES.ERROR
@@ -645,7 +670,7 @@ class MonedasModule {
       return;
     }
 
-    const student = this.students.find((s) => s.id == studentId);
+    const student = this.students.find((s) => s.id_estudiante == studentId);
     if (!student || student.balance < amount) {
       uiService.showNotification(
         "El estudiante no tiene suficientes monedas",

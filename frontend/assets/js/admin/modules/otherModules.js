@@ -6,33 +6,6 @@ import apiService from "../services/apiService.js";
 import uiService from "../services/uiService.js";
 
 // ==========================================
-// MÓDULO DE EXÁMENES
-// ==========================================
-class ExamenesModule {
-  render() {
-    const content = `
-      <div class="space-y-6">
-        <div class="bg-white p-4 rounded-xl shadow-lg flex justify-between items-center">
-          <h2 class="text-lg font-semibold text-slate-700">Gestión de Exámenes</h2>
-          <button class="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg flex items-center gap-2 text-sm">
-            <i data-lucide="file-plus" class="w-4 h-4"></i>
-            Nuevo Examen
-          </button>
-        </div>
-        <div class="bg-white p-6 rounded-xl shadow-lg">
-          <div class="text-center py-12">
-            <i data-lucide="file-text" class="w-16 h-16 mx-auto mb-4 text-slate-300"></i>
-            <p class="text-slate-400 mb-2">Función en desarrollo</p>
-            <p class="text-sm text-slate-500">Pronto podrás gestionar exámenes aquí</p>
-          </div>
-        </div>
-      </div>
-    `;
-    uiService.updateMainContent(content);
-  }
-}
-
-// ==========================================
 // MÓDULO DE MONEDAS
 // ==========================================
 // class MonedasModule {
@@ -242,6 +215,5 @@ class ReportesModule {
 // ==========================================
 // EXPORTAR MÓDULOS
 // ==========================================
-export const examenesModule = new ExamenesModule();
 export const rankingsModule = new RankingsModule();
 export const reportesModule = new ReportesModule();

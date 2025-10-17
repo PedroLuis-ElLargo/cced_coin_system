@@ -11,6 +11,7 @@ import studentsModule from "./modules/studentsModule.js";
 import tasksModule from "./modules/tasksModule.js";
 import codesModule from "./modules/codesModule.js";
 import monedasModule from "./modules/monedasModule.js";
+import { examenesModule } from "./modules/examenesModule.js";
 
 class App {
   constructor() {
@@ -84,6 +85,7 @@ class App {
     window.tasksModule = tasksModule;
     window.codesModule = codesModule;
     window.monedasModule = monedasModule;
+    window.examenesModule = examenesModule;
 
     // Exponer navegación
     window.navigateTo = (section) => navigationModule.navigateTo(section);

@@ -1,10 +1,20 @@
 // ==============================
-// SERVER.JS - Servidor Principal
+// SERVER.JS
 // ==============================
 
 const express = require("express");
 const cors = require("cors");
+const multer = require("multer"); // AGREGAR
 require("dotenv").config();
+const fs = require("fs");
+const path = require("path");
+
+// Crear carpeta uploads si no existe
+const uploadsDir = path.join(__dirname, "../uploads/exams");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log("✅ Carpeta uploads/exams creada");
+}
 
 const app = express();
 const publicRoutes = require("./routes/public");
@@ -21,9 +31,13 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Servir archivos estáticos de uploads (para downloads)
+app.use("/uploads", express.static("uploads"));
+
 // Logging de peticiones en desarrollo
 if (process.env.NODE_ENV === "development") {
   app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`);
     next();
   });
 }
@@ -42,7 +56,7 @@ app.use("/api/student", require("./routes/student"));
 app.get("/api/health", (req, res) => {
   res.json({
     status: "OK",
-    message: "CCED Coin System API funcionando correctamente",
+    message: "STHELA Coin System API funcionando correctamente",
     timestamp: new Date().toISOString(),
   });
 });
@@ -58,10 +72,46 @@ app.use((req, res) => {
 });
 
 // ==============================
-// MANEJO DE ERRORES GLOBALES
+// MANEJO DE ERRORES GLOBALES (INCLUYE MULTER)
 // ==============================
 app.use((err, req, res, next) => {
   console.error("Error:", err);
+
+  // Manejo específico de errores de Multer
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        success: false,
+        message: "El archivo es demasiado grande. Máximo 10MB por archivo.",
+      });
+    }
+    if (err.code === "LIMIT_FILE_COUNT") {
+      return res.status(400).json({
+        success: false,
+        message: "Demasiados archivos. Máximo 10 archivos a la vez.",
+      });
+    }
+    if (err.code === "LIMIT_UNEXPECTED_FILE") {
+      return res.status(400).json({
+        success: false,
+        message: "Campo de archivo inesperado.",
+      });
+    }
+    return res.status(400).json({
+      success: false,
+      message: `Error al subir archivo: ${err.message}`,
+    });
+  }
+
+  // Error de validación de tipo de archivo
+  if (err.message && err.message.includes("Solo se permiten archivos")) {
+    return res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+  }
+
+  // Otros errores
   res.status(err.status || 500).json({
     success: false,
     message: err.message || "Error interno del servidor",
@@ -72,11 +122,11 @@ app.use((err, req, res, next) => {
 // ==============================
 // INICIAR SERVIDOR
 // ==============================
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {
   console.log("╔════════════════════════════════════════╗");
-  console.log("║   🚀 CCED COIN SYSTEM API              ║");
+  console.log("║   🚀 STHELA COIN SYSTEM API              ║");
   console.log("╠════════════════════════════════════════╣");
   console.log(`║   Servidor: http://localhost:${PORT}     ║`);
   console.log(
@@ -88,9 +138,11 @@ app.listen(PORT, () => {
 
 // Manejo de cierre graceful
 process.on("SIGTERM", () => {
+  console.log("🔴 SIGTERM recibido, cerrando servidor...");
   process.exit(0);
 });
 
 process.on("SIGINT", () => {
+  console.log("🔴 SIGINT recibido, cerrando servidor...");
   process.exit(0);
 });

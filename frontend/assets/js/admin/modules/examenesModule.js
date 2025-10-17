@@ -3,13 +3,12 @@
 // ==========================================
 
 import uiService from "../services/uiService.js";
-import { CONFIG, NOTIFICATION_TYPES } from "../config.js"; // ✅ CORREGIDO: Importar ambos
+import { CONFIG, NOTIFICATION_TYPES } from "../config.js";
 
 class ExamenesModule {
   constructor() {
     this.exams = [];
     this.currentExam = null;
-    // ✅ CORREGIDO: Obtener rol desde adminData
     const adminData = JSON.parse(
       localStorage.getItem(CONFIG.STORAGE_KEYS.ADMIN_DATA) || "{}"
     );
@@ -32,7 +31,7 @@ class ExamenesModule {
           ${
             this.userRole === "admin"
               ? `
-            <button type="button" onclick="examenesModule.showCreateModal()" 
+            <button onclick="examenesModule.showCreateModal()" 
                     class="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg flex items-center gap-2 text-sm">
               <i data-lucide="file-plus" class="w-4 h-4"></i>
               Nuevo Examen
@@ -72,7 +71,7 @@ class ExamenesModule {
           <div class="p-6">
             <div class="flex justify-between items-center mb-6">
               <h3 class="text-xl font-semibold text-slate-800" id="modalTitle">Nuevo Examen</h3>
-              <button type="button" onclick="examenesModule.closeModal()" class="text-slate-400 hover:text-slate-600">
+              <button onclick="examenesModule.closeModal()" class="text-slate-400 hover:text-slate-600">
                 <i data-lucide="x" class="w-6 h-6"></i>
               </button>
             </div>
@@ -145,7 +144,7 @@ class ExamenesModule {
           <div class="p-6">
             <div class="flex justify-between items-center mb-6">
               <h3 class="text-xl font-semibold text-slate-800">Archivos del Examen</h3>
-              <button type="button" onclick="examenesModule.closeFilesModal()" class="text-slate-400 hover:text-slate-600">
+              <button onclick="examenesModule.closeFilesModal()" class="text-slate-400 hover:text-slate-600">
                 <i data-lucide="x" class="w-6 h-6"></i>
               </button>
             </div>
@@ -159,7 +158,7 @@ class ExamenesModule {
                        multiple
                        class="hidden"
                        onchange="examenesModule.handleFileSelect(event)">
-                <button type="button" onclick="document.getElementById('fileInput').click()"
+                <button onclick="document.getElementById('fileInput').click()"
                         class="w-full px-4 py-3 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg flex items-center justify-center gap-2 text-sm font-medium text-slate-700">
                   <i data-lucide="upload" class="w-5 h-5"></i>
                   Subir Archivos
@@ -246,9 +245,7 @@ class ExamenesModule {
           </div>
 
           <div class="flex gap-2 ml-4">
-            <button type="button" onclick="examenesModule.showFiles(${
-              exam.id
-            })" 
+            <button onclick="examenesModule.showFiles(${exam.id})" 
                     class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 tooltip"
                     title="Ver archivos">
               <i data-lucide="folder" class="w-5 h-5"></i>
@@ -256,12 +253,12 @@ class ExamenesModule {
             ${
               this.userRole === "admin"
                 ? `
-              <button type="button" onclick="examenesModule.editExam(${exam.id})" 
+              <button onclick="examenesModule.editExam(${exam.id})" 
                       class="p-2 hover:bg-blue-50 rounded-lg text-blue-600 tooltip"
                       title="Editar">
                 <i data-lucide="edit" class="w-5 h-5"></i>
               </button>
-              <button type="button" onclick="examenesModule.deleteExam(${exam.id})" 
+              <button onclick="examenesModule.deleteExam(${exam.id})" 
                       class="p-2 hover:bg-red-50 rounded-lg text-red-600 tooltip"
                       title="Eliminar">
                 <i data-lucide="trash-2" class="w-5 h-5"></i>
@@ -354,7 +351,6 @@ class ExamenesModule {
     };
 
     try {
-      // ✅ CORREGIDO: Usar CONFIG.API_URL
       const url = this.currentExam
         ? `${CONFIG.API_URL}/admin/exams/${this.currentExam.id}`
         : `${CONFIG.API_URL}/admin/exams`;
@@ -400,7 +396,6 @@ class ExamenesModule {
     }
 
     try {
-      // ✅ CORREGIDO: Usar CONFIG.API_URL
       const response = await fetch(`${CONFIG.API_URL}/admin/exams/${id}`, {
         method: "DELETE",
         headers: {
@@ -508,7 +503,7 @@ class ExamenesModule {
           ${
             this.userRole === "admin"
               ? `
-            <button type="button" onclick="examenesModule.deleteFile(${file.id})"
+            <button onclick="examenesModule.deleteFile(${file.id})"
                     class="p-2 hover:bg-white rounded-lg text-red-600"
                     title="Eliminar">
               <i data-lucide="trash-2" class="w-5 h-5"></i>
@@ -538,7 +533,6 @@ class ExamenesModule {
     }
 
     try {
-      // ✅ CORREGIDO: Usar CONFIG.API_URL
       const response = await fetch(
         `${CONFIG.API_URL}/admin/exams/${this.currentExam.id}/files`,
         {
@@ -557,7 +551,7 @@ class ExamenesModule {
       if (data.success) {
         uiService.showNotification(data.message, NOTIFICATION_TYPES.SUCCESS);
         await this.loadFiles(this.currentExam.id);
-        event.target.value = ""; // Reset input
+        event.target.value = "";
       } else {
         uiService.showNotification(data.message, NOTIFICATION_TYPES.ERROR);
       }
@@ -574,7 +568,6 @@ class ExamenesModule {
     if (!confirm("¿Eliminar este archivo?")) return;
 
     try {
-      // ✅ CORREGIDO: Usar CONFIG.API_URL
       const response = await fetch(
         `${CONFIG.API_URL}/admin/exams/files/${fileId}`,
         {

@@ -86,6 +86,23 @@ CREATE TABLE exams (
     INDEX idx_activo (activo)
 ) ENGINE=InnoDB;
 
+CREATE TABLE exam_files (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    exam_id INT NOT NULL,
+    nombre_archivo VARCHAR(255) NOT NULL,
+    nombre_original VARCHAR(255) NOT NULL,
+    ruta_archivo VARCHAR(500) NOT NULL,
+    tipo_archivo VARCHAR(100),
+    tamanio INT,
+    subido_por INT,
+    fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (exam_id) REFERENCES exams(id) ON DELETE CASCADE,
+    FOREIGN KEY (subido_por) REFERENCES users(id) ON DELETE SET NULL,
+    
+    INDEX idx_exam (exam_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ==============================
 -- TABLA: Transacciones (movimientos de monedas)
 -- ==============================

@@ -5,6 +5,8 @@
 const bcrypt = require("bcryptjs");
 const { query, transaction } = require("../config/database");
 const crypto = require("crypto");
+const fs = require("fs").promises;
+const path = require("path");
 
 // ==============================
 // GESTIÓN DE ESTUDIANTES
@@ -654,11 +656,83 @@ exports.assignTask = async (req, res) => {
 // ==============================
 // GESTIÓN DE EXÁMENES
 // ==============================
+// ===== OBTENER TODOS LOS EXÁMENES =====
+exports.getExams = async (req, res) => {
+  try {
+    const exams = await query(`
+      SELECT 
+        e.*,
+        COUNT(DISTINCT ef.id) as num_archivos,
+        COUNT(DISTINCT er.id) as num_calificaciones,
+        u.nombre as creador_nombre
+      FROM exams e
+      LEFT JOIN exam_files ef ON e.id = ef.exam_id
+      LEFT JOIN exam_results er ON e.id = er.exam_id
+      LEFT JOIN users u ON e.creado_por = u.id
+      GROUP BY e.id
+      ORDER BY e.fecha DESC
+    `);
 
-// Crear examen
+    res.json({
+      success: true,
+      exams: exams,
+    });
+  } catch (error) {
+    console.error("Error al obtener exámenes:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener exámenes",
+    });
+  }
+};
+
+// ===== OBTENER EXAMEN POR ID =====
+exports.getExamById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const exam = await query(
+      `
+      SELECT 
+        e.*,
+        u.nombre as creador_nombre
+      FROM exams e
+      LEFT JOIN users u ON e.creado_por = u.id
+      WHERE e.id = ?
+    `,
+      [id]
+    );
+
+    if (exam.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Examen no encontrado",
+      });
+    }
+
+    res.json({
+      success: true,
+      exam: exam[0],
+    });
+  } catch (error) {
+    console.error("Error al obtener examen:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener examen",
+    });
+  }
+};
+
+// ===== CREAR EXAMEN =====
 exports.createExam = async (req, res) => {
   try {
-    const { nombre, fecha, nota_minima, precio_por_punto } = req.body;
+    const {
+      nombre,
+      fecha,
+      nota_minima = 8,
+      precio_por_punto = 2,
+      activo = true,
+    } = req.body;
 
     if (!nombre || !fecha) {
       return res.status(400).json({
@@ -669,10 +743,10 @@ exports.createExam = async (req, res) => {
 
     const result = await query(
       `
-            INSERT INTO exams (nombre, fecha, nota_minima, precio_por_punto, creado_por)
-            VALUES (?, ?, ?, ?, ?)
-        `,
-      [nombre, fecha, nota_minima || 8, precio_por_punto || 2, req.user.id]
+      INSERT INTO exams (nombre, fecha, nota_minima, precio_por_punto, creado_por, activo)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `,
+      [nombre, fecha, nota_minima, precio_por_punto, req.user.id, activo]
     );
 
     res.status(201).json({
@@ -682,20 +756,260 @@ exports.createExam = async (req, res) => {
         id: result.insertId,
         nombre,
         fecha,
-        nota_minima: nota_minima || 8,
+        nota_minima,
+        precio_por_punto,
+        activo,
       },
     });
   } catch (error) {
     console.error("Error al crear examen:", error);
-    res.status(500).json({ success: false, message: "Error al crear examen" });
+    res.status(500).json({
+      success: false,
+      message: "Error al crear examen",
+    });
   }
 };
 
-// Registrar calificaciones de examen
+// ===== ACTUALIZAR EXAMEN =====
+exports.updateExam = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, fecha, nota_minima, precio_por_punto, activo } = req.body;
+
+    const exam = await query("SELECT id FROM exams WHERE id = ?", [id]);
+    if (exam.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Examen no encontrado",
+      });
+    }
+
+    await query(
+      `
+      UPDATE exams 
+      SET nombre = ?, 
+          fecha = ?, 
+          nota_minima = ?, 
+          precio_por_punto = ?,
+          activo = ?
+      WHERE id = ?
+    `,
+      [nombre, fecha, nota_minima, precio_por_punto, activo, id]
+    );
+
+    res.json({
+      success: true,
+      message: "Examen actualizado exitosamente",
+    });
+  } catch (error) {
+    console.error("Error al actualizar examen:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al actualizar examen",
+    });
+  }
+};
+
+// ===== ELIMINAR EXAMEN =====
+exports.deleteExam = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const exam = await query("SELECT id FROM exams WHERE id = ?", [id]);
+    if (exam.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Examen no encontrado",
+      });
+    }
+
+    // Obtener archivos asociados
+    const files = await query(
+      "SELECT ruta_archivo FROM exam_files WHERE exam_id = ?",
+      [id]
+    );
+
+    // Eliminar archivos físicos
+    for (const file of files) {
+      try {
+        await fs.unlink(file.ruta_archivo);
+      } catch (err) {
+        console.error("Error al eliminar archivo físico:", err);
+      }
+    }
+
+    // Eliminar examen (CASCADE eliminará archivos y resultados)
+    await query("DELETE FROM exams WHERE id = ?", [id]);
+
+    res.json({
+      success: true,
+      message: "Examen eliminado exitosamente",
+    });
+  } catch (error) {
+    console.error("Error al eliminar examen:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al eliminar examen",
+    });
+  }
+};
+
+// ===== OBTENER ARCHIVOS DE UN EXAMEN =====
+exports.getExamFiles = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const files = await query(
+      `
+      SELECT 
+        ef.*,
+        u.nombre as subido_por_nombre
+      FROM exam_files ef
+      LEFT JOIN users u ON ef.subido_por = u.id
+      WHERE ef.exam_id = ?
+      ORDER BY ef.fecha_subida DESC
+    `,
+      [id]
+    );
+
+    res.json({
+      success: true,
+      files: files,
+    });
+  } catch (error) {
+    console.error("Error al obtener archivos:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener archivos",
+    });
+  }
+};
+
+// ===== SUBIR ARCHIVOS =====
+exports.uploadExamFiles = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const files = req.files;
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No se proporcionaron archivos",
+      });
+    }
+
+    const exam = await query("SELECT id FROM exams WHERE id = ?", [id]);
+    if (exam.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Examen no encontrado",
+      });
+    }
+
+    const uploadedFiles = [];
+    for (const file of files) {
+      const result = await query(
+        `
+        INSERT INTO exam_files 
+        (exam_id, nombre_archivo, nombre_original, ruta_archivo, tipo_archivo, tamanio, subido_por)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `,
+        [
+          id,
+          file.filename,
+          file.originalname,
+          file.path,
+          file.mimetype,
+          file.size,
+          req.user.id,
+        ]
+      );
+
+      uploadedFiles.push({
+        id: result.insertId,
+        nombre_original: file.originalname,
+        tamanio: file.size,
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `${files.length} archivo(s) subido(s) exitosamente`,
+      files: uploadedFiles,
+    });
+  } catch (error) {
+    console.error("Error al subir archivos:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al subir archivos",
+    });
+  }
+};
+
+// ===== DESCARGAR ARCHIVO =====
+exports.downloadExamFile = async (req, res) => {
+  try {
+    const { fileId } = req.params;
+
+    const file = await query("SELECT * FROM exam_files WHERE id = ?", [fileId]);
+
+    if (file.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Archivo no encontrado",
+      });
+    }
+
+    const filePath = path.resolve(file[0].ruta_archivo);
+    res.download(filePath, file[0].nombre_original);
+  } catch (error) {
+    console.error("Error al descargar archivo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al descargar archivo",
+    });
+  }
+};
+
+// ===== ELIMINAR ARCHIVO =====
+exports.deleteExamFile = async (req, res) => {
+  try {
+    const { fileId } = req.params;
+
+    const file = await query("SELECT * FROM exam_files WHERE id = ?", [fileId]);
+
+    if (file.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Archivo no encontrado",
+      });
+    }
+
+    try {
+      await fs.unlink(file[0].ruta_archivo);
+    } catch (err) {
+      console.error("Error al eliminar archivo físico:", err);
+    }
+
+    await query("DELETE FROM exam_files WHERE id = ?", [fileId]);
+
+    res.json({
+      success: true,
+      message: "Archivo eliminado exitosamente",
+    });
+  } catch (error) {
+    console.error("Error al eliminar archivo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al eliminar archivo",
+    });
+  }
+};
+
+// ===== REGISTRAR CALIFICACIONES (ADMIN) =====
 exports.registerExamScores = async (req, res) => {
   try {
     const { exam_id, calificaciones } = req.body;
-    // calificaciones = [{ user_id: 1, nota_obtenida: 7.5 }, ...]
 
     if (!exam_id || !Array.isArray(calificaciones)) {
       return res.status(400).json({
@@ -704,7 +1018,6 @@ exports.registerExamScores = async (req, res) => {
       });
     }
 
-    // Verificar que el examen existe
     const exam = await query("SELECT id FROM exams WHERE id = ?", [exam_id]);
     if (exam.length === 0) {
       return res.status(404).json({
@@ -713,7 +1026,6 @@ exports.registerExamScores = async (req, res) => {
       });
     }
 
-    // Registrar calificaciones una por una
     let registradas = 0;
     let actualizadas = 0;
 
@@ -722,12 +1034,12 @@ exports.registerExamScores = async (req, res) => {
 
       // Verificar si ya existe una calificación
       const existing = await query(
-        "SELECT id FROM exam_results WHERE user_id = ? AND exam_id = ?",
+        "SELECT id, puntos_comprados, monedas_gastadas FROM exam_results WHERE user_id = ? AND exam_id = ?",
         [user_id, exam_id]
       );
 
       if (existing.length > 0) {
-        // Actualizar calificación existente
+        // Actualizar solo la nota obtenida, mantener puntos comprados
         await query(
           "UPDATE exam_results SET nota_obtenida = ? WHERE user_id = ? AND exam_id = ?",
           [nota_obtenida, user_id, exam_id]
@@ -736,7 +1048,7 @@ exports.registerExamScores = async (req, res) => {
       } else {
         // Insertar nueva calificación
         await query(
-          "INSERT INTO exam_results (user_id, exam_id, nota_obtenida) VALUES (?, ?, ?)",
+          "INSERT INTO exam_results (user_id, exam_id, nota_obtenida, puntos_comprados, monedas_gastadas) VALUES (?, ?, ?, 0, 0)",
           [user_id, exam_id, nota_obtenida]
         );
         registradas++;
@@ -745,7 +1057,7 @@ exports.registerExamScores = async (req, res) => {
 
     res.json({
       success: true,
-      message: `Calificaciones procesadas correctamente`,
+      message: "Calificaciones procesadas correctamente",
       details: {
         total: calificaciones.length,
         registradas: registradas,
@@ -754,9 +1066,232 @@ exports.registerExamScores = async (req, res) => {
     });
   } catch (error) {
     console.error("Error al registrar calificaciones:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Error al registrar calificaciones" });
+    res.status(500).json({
+      success: false,
+      message: "Error al registrar calificaciones",
+    });
+  }
+};
+
+// ===== OBTENER RESULTADOS DE UN EXAMEN (ADMIN) =====
+exports.getExamResults = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const results = await query(
+      `
+      SELECT 
+        er.*,
+        u.nombre,
+        u.apellido,
+        u.email,
+        e.nota_minima,
+        CASE 
+          WHEN er.nota_final >= e.nota_minima THEN 'Aprobado'
+          ELSE 'Reprobado'
+        END as estado
+      FROM exam_results er
+      JOIN users u ON er.user_id = u.id
+      JOIN exams e ON er.exam_id = e.id
+      WHERE er.exam_id = ?
+      ORDER BY er.nota_final DESC
+    `,
+      [id]
+    );
+
+    // Calcular estadísticas
+    const stats = {
+      total: results.length,
+      aprobados: results.filter((r) => r.estado === "Aprobado").length,
+      reprobados: results.filter((r) => r.estado === "Reprobado").length,
+      promedio_nota_obtenida:
+        results.reduce((sum, r) => sum + parseFloat(r.nota_obtenida), 0) /
+        (results.length || 1),
+      promedio_nota_final:
+        results.reduce((sum, r) => sum + parseFloat(r.nota_final), 0) /
+        (results.length || 1),
+      total_puntos_comprados: results.reduce(
+        (sum, r) => sum + parseInt(r.puntos_comprados),
+        0
+      ),
+      total_monedas_gastadas: results.reduce(
+        (sum, r) => sum + parseFloat(r.monedas_gastadas),
+        0
+      ),
+    };
+
+    res.json({
+      success: true,
+      results: results,
+      stats: stats,
+    });
+  } catch (error) {
+    console.error("Error al obtener resultados:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener resultados",
+    });
+  }
+};
+
+// ===== COMPRAR PUNTOS PARA EXAMEN (ESTUDIANTE) =====
+exports.buyExamPoints = async (req, res) => {
+  try {
+    const { id } = req.params; // exam_id
+    const { puntos } = req.body;
+    const userId = req.user.id;
+
+    if (!puntos || puntos < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Debes especificar al menos 1 punto",
+      });
+    }
+
+    // Obtener información del examen
+    const exam = await query(
+      "SELECT precio_por_punto FROM exams WHERE id = ?",
+      [id]
+    );
+
+    if (exam.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Examen no encontrado",
+      });
+    }
+
+    // Obtener resultado del estudiante
+    const result = await query(
+      "SELECT * FROM exam_results WHERE user_id = ? AND exam_id = ?",
+      [userId, id]
+    );
+
+    if (result.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No tienes una calificación registrada en este examen",
+      });
+    }
+
+    const currentResult = result[0];
+    const precioPorPunto = parseFloat(exam[0].precio_por_punto);
+    const costoTotal = puntos * precioPorPunto;
+
+    // Verificar que no exceda el máximo de 10
+    if (
+      parseFloat(currentResult.nota_obtenida) +
+        parseInt(currentResult.puntos_comprados) +
+        puntos >
+      10
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "No puedes superar la nota máxima de 10.00",
+      });
+    }
+
+    // Obtener monedas del usuario
+    const user = await query("SELECT coins FROM users WHERE id = ?", [userId]);
+
+    if (user.length === 0 || parseFloat(user[0].coins) < costoTotal) {
+      return res.status(400).json({
+        success: false,
+        message: "No tienes suficientes monedas",
+        monedas_necesarias: costoTotal,
+        monedas_disponibles: user[0]?.coins || 0,
+      });
+    }
+
+    // Realizar la transacción
+    await query("START TRANSACTION");
+
+    try {
+      // Descontar monedas del usuario
+      await query("UPDATE users SET coins = coins - ? WHERE id = ?", [
+        costoTotal,
+        userId,
+      ]);
+
+      // Actualizar puntos comprados en exam_results
+      const nuevosPuntosComprados =
+        parseInt(currentResult.puntos_comprados) + puntos;
+      const nuevasMonedasGastadas =
+        parseFloat(currentResult.monedas_gastadas) + costoTotal;
+
+      await query(
+        "UPDATE exam_results SET puntos_comprados = ?, monedas_gastadas = ? WHERE id = ?",
+        [nuevosPuntosComprados, nuevasMonedasGastadas, currentResult.id]
+      );
+
+      await query("COMMIT");
+
+      // Obtener resultado actualizado
+      const updatedResult = await query(
+        "SELECT * FROM exam_results WHERE id = ?",
+        [currentResult.id]
+      );
+
+      res.json({
+        success: true,
+        message: `Has comprado ${puntos} punto(s) exitosamente`,
+        result: {
+          nota_obtenida: updatedResult[0].nota_obtenida,
+          puntos_comprados: updatedResult[0].puntos_comprados,
+          nota_final: updatedResult[0].nota_final,
+          monedas_gastadas: updatedResult[0].monedas_gastadas,
+          costo_compra: costoTotal,
+        },
+      });
+    } catch (error) {
+      await query("ROLLBACK");
+      throw error;
+    }
+  } catch (error) {
+    console.error("Error al comprar puntos:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al procesar la compra de puntos",
+    });
+  }
+};
+
+// ===== MIS RESULTADOS DE EXÁMENES (ESTUDIANTE) =====
+exports.getMyExamResults = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const results = await query(
+      `
+      SELECT 
+        er.*,
+        e.nombre as exam_nombre,
+        e.fecha as exam_fecha,
+        e.nota_minima,
+        e.precio_por_punto,
+        CASE 
+          WHEN er.nota_final >= e.nota_minima THEN 'Aprobado'
+          ELSE 'Reprobado'
+        END as estado,
+        (10.00 - er.nota_final) as puntos_disponibles_comprar
+      FROM exam_results er
+      JOIN exams e ON er.exam_id = e.id
+      WHERE er.user_id = ?
+      ORDER BY e.fecha DESC
+    `,
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      results: results,
+    });
+  } catch (error) {
+    console.error("Error al obtener mis resultados:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener tus resultados",
+    });
   }
 };
 

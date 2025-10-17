@@ -6,6 +6,38 @@ const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/adminController");
 const { verifyToken, verifyAdmin } = require("../middleware/auth");
+const multer = require("multer");
+const path = require("path");
+
+// Configuración de Multer para archivos
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/exams/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /pdf|doc|docx|xls|xlsx|txt|zip/;
+    const extname = allowedTypes.test(
+      path.extname(file.originalname).toLowerCase()
+    );
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (extname && mimetype) {
+      return cb(null, true);
+    }
+    cb(
+      new Error("Solo se permiten archivos PDF, DOC, DOCX, XLS, XLSX, TXT, ZIP")
+    );
+  },
+});
 
 // Aplicar middleware de autenticación y verificación de admin a todas las rutas
 router.use(verifyToken);
@@ -66,11 +98,30 @@ router.post("/tasks/assign", adminController.assignTask);
 // GESTIÓN DE EXÁMENES
 // ==============================
 
-// POST /api/admin/exams - Crear nuevo examen
+// ===== CRUD EXÁMENES =====
+router.get("/exams", adminController.getExams);
 router.post("/exams", adminController.createExam);
+router.get("/exams/:id", adminController.getExamById);
+router.put("/exams/:id", adminController.updateExam);
+router.delete("/exams/:id", adminController.deleteExam);
 
-// POST /api/admin/exams/scores - Registrar calificaciones
+// ===== GESTIÓN DE ARCHIVOS =====
+router.get("/exams/:id/files", adminController.getExamFiles);
+router.post(
+  "/exams/:id/files",
+  upload.array("files", 10),
+  adminController.uploadExamFiles
+);
+router.get("/exams/files/:fileId/download", adminController.downloadExamFile);
+router.delete("/exams/files/:fileId", adminController.deleteExamFile);
+
+// ===== CALIFICACIONES =====
 router.post("/exams/scores", adminController.registerExamScores);
+router.get("/exams/:id/results", adminController.getExamResults);
+
+// ===== COMPRA DE PUNTOS (ESTUDIANTES) =====
+router.post("/exams/:id/buy-points", adminController.buyExamPoints);
+router.get("/my-exam-results", adminController.getMyExamResults);
 
 // ==============================
 // ESTADÍSTICAS

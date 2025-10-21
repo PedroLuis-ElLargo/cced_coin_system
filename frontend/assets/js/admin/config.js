@@ -9,7 +9,10 @@ export const CONFIG = {
     ADMIN_DATA: "adminData",
     STUDENT_TOKEN: "studentToken",
     STUDENT_DATA: "studentData",
+    LAST_ACTIVITY: "lastActivity",
   },
+  SESSION_TIMEOUT: 10 * 60 * 1000,
+  TIMEOUT_WARNING: 60 * 1000,
   NOTIFICATION_DURATION: 3000,
   CHART_COLORS: {
     primary: "rgba(59, 130, 246, 0.8)",

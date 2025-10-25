@@ -141,21 +141,35 @@ class ApiService {
   }
 
   // ==========================================
-  // CÓDIGOS
+  // MÉTODOS DE CÓDIGOS DE REGISTRO
   // ==========================================
-  async getCodes() {
-    return this.request("/admin/codes");
-  }
 
-  async generateCode(codeData) {
+  // Generar código de registro
+  async generateCode(fechaExpiracion) {
     return this.request("/admin/codes/generate", {
       method: "POST",
-      body: JSON.stringify(codeData),
+      body: JSON.stringify({ fecha_expiracion: fechaExpiracion }),
     });
   }
 
-  async deactivateCode(id) {
-    return this.request(`/admin/codes/${id}`, {
+  // Obtener todos los códigos
+  async getCodes() {
+    return this.request("/admin/codes", {
+      method: "GET",
+    });
+  }
+
+  // Actualizar fecha de expiración de código
+  async updateCodeExpiration(codeId, fechaExpiracion) {
+    return this.request(`/admin/codes/${codeId}/expiration`, {
+      method: "PUT",
+      body: JSON.stringify({ fecha_expiracion: fechaExpiracion }),
+    });
+  }
+
+  // Eliminar código
+  async deleteCode(codeId) {
+    return this.request(`/admin/codes/${codeId}`, {
       method: "DELETE",
     });
   }

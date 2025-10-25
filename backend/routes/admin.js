@@ -77,11 +77,17 @@ router.delete("/students/:id", adminController.deleteStudent);
 // CÓDIGOS DE REGISTRO
 // ==============================
 
-// POST /api/admin/codes/generate - Generar código de registro
+// POST /api/admin/codes/generate - Generar código
 router.post("/codes/generate", adminController.generateRegistrationCode);
 
 // GET /api/admin/codes - Obtener todos los códigos
 router.get("/codes", adminController.getAllCodes);
+
+// PUT /api/admin/codes/:id/expiration - Actualizar fecha de expiración
+router.put("/codes/:id/expiration", adminController.updateCodeExpiration);
+
+// DELETE /api/admin/codes/:id - Eliminar código
+router.delete("/codes/:id", adminController.deleteCode);
 
 // ==============================
 // GESTIÓN DE TAREAS

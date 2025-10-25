@@ -727,7 +727,9 @@
       // Small runtime check: if monedasModule isn't exposed by the app, warn in console
       setTimeout(() => {
         if (!window.monedasModule) {
-          console.warn('Advertencia: window.monedasModule no está expuesto. Si ves esto, asegúrate de que `app.js` inicialice y exponga el módulo correctamente.');
+          console.warn(
+            "Advertencia: window.monedasModule no está expuesto. Si ves esto, asegúrate de que `app.js` inicialice y exponga el módulo correctamente."
+          );
         }
       }, 2000);
     </script>

@@ -224,30 +224,50 @@ exports.deleteStudent = async (req, res) => {
 };
 
 // ==============================
-// GESTIÓN DE CÓDIGOS DE REGISTRO
+// GENERAR CÓDIGO DE REGISTRO
 // ==============================
-
-// Generar código de registro
 exports.generateRegistrationCode = async (req, res) => {
   try {
-    const { dias_validos } = req.body;
+    const { fecha_expiracion } = req.body;
+
+    console.log("📝 Request body:", req.body); // Debug
+    console.log("👤 Usuario:", req.user); // Debug
+
+    // VALIDAR que fecha_expiracion es obligatoria
+    if (!fecha_expiracion) {
+      return res.status(400).json({
+        success: false,
+        message: "Debe especificar una fecha de expiración",
+      });
+    }
+
+    // Validar que la fecha sea futura
+    const expiracion = new Date(fecha_expiracion);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    if (expiracion < hoy) {
+      return res.status(400).json({
+        success: false,
+        message: "La fecha de expiración debe ser futura",
+      });
+    }
 
     // Generar código único
-    const code = `CCED-${new Date().getFullYear()}-${crypto
+    const code = `STHELA-${new Date().getFullYear()}-${crypto
       .randomBytes(4)
       .toString("hex")
       .toUpperCase()}`;
 
-    let expiracion = null;
-    if (dias_validos && dias_validos > 0) {
-      expiracion = new Date();
-      expiracion.setDate(expiracion.getDate() + parseInt(dias_validos));
-    }
+    console.log("🔑 Código generado:", code); // Debug
 
+    // Insertar en base de datos
     await query(
       "INSERT INTO registration_codes (code, creado_por, fecha_expiracion) VALUES (?, ?, ?)",
       [code, req.user.id, expiracion]
     );
+
+    console.log("✅ Código insertado en BD"); // Debug
 
     res.status(201).json({
       success: true,
@@ -256,19 +276,140 @@ exports.generateRegistrationCode = async (req, res) => {
       expiracion,
     });
   } catch (error) {
-    console.error("Error al generar código:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Error al generar código" });
+    console.error("❌ Error al generar código:", error);
+    console.error("Stack trace:", error.stack); // Ver el stack completo
+    res.status(500).json({
+      success: false,
+      message: "Error al generar código",
+      error: error.message, // <- AGREGAR ESTO para ver el error en el frontend
+    });
   }
 };
 
-// Obtener todos los códigos
+// ==============================
+// ACTUALIZAR FECHA DE EXPIRACIÓN
+// ==============================
+exports.updateCodeExpiration = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { fecha_expiracion } = req.body;
+
+    if (!fecha_expiracion) {
+      return res.status(400).json({
+        success: false,
+        message: "Debe especificar una fecha de expiración",
+      });
+    }
+
+    // Validar que la fecha sea futura
+    const nuevaExpiracion = new Date(fecha_expiracion);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    if (nuevaExpiracion < hoy) {
+      return res.status(400).json({
+        success: false,
+        message: "La fecha de expiración debe ser futura",
+      });
+    }
+
+    // Verificar que el código existe y no ha sido usado
+    const codes = await query(
+      "SELECT usado FROM registration_codes WHERE id = ?",
+      [id]
+    );
+
+    if (!codes || codes.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Código no encontrado",
+      });
+    }
+
+    const code = codes[0];
+
+    if (code.usado === 1) {
+      return res.status(400).json({
+        success: false,
+        message: "No se puede modificar un código que ya fue usado",
+      });
+    }
+
+    // Actualizar fecha de expiración
+    await query(
+      "UPDATE registration_codes SET fecha_expiracion = ? WHERE id = ?",
+      [nuevaExpiracion, id]
+    );
+
+    res.json({
+      success: true,
+      message: "Fecha de expiración actualizada exitosamente",
+      nueva_expiracion: nuevaExpiracion,
+    });
+  } catch (error) {
+    console.error("Error al actualizar fecha de expiración:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al actualizar fecha de expiración",
+      error: error.message,
+    });
+  }
+};
+
+// ==============================
+// ELIMINAR CÓDIGO
+// ==============================
+exports.deleteCode = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verificar que el código existe
+    const codes = await query(
+      "SELECT usado FROM registration_codes WHERE id = ?",
+      [id]
+    );
+
+    if (!codes || codes.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Código no encontrado",
+      });
+    }
+
+    const code = codes[0];
+
+    if (code.usado === 1) {
+      return res.status(400).json({
+        success: false,
+        message: "No se puede eliminar un código que ya fue usado",
+      });
+    }
+
+    // Eliminar código
+    await query("DELETE FROM registration_codes WHERE id = ?", [id]);
+
+    res.json({
+      success: true,
+      message: "Código eliminado exitosamente",
+    });
+  } catch (error) {
+    console.error("Error al eliminar código:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al eliminar código",
+      error: error.message,
+    });
+  }
+};
+
+// ==============================
+// OBTENER TODOS LOS CÓDIGOS
+// ==============================
 exports.getAllCodes = async (req, res) => {
   try {
     const codes = await query(`
       SELECT 
-        rc.id, 
+        rc.id,
         rc.code as codigo,
         rc.usado,
         rc.fecha_creacion,
@@ -321,7 +462,6 @@ exports.getAllCodes = async (req, res) => {
   }
 };
 
-// ==============================
 // GESTIÓN DE TAREAS
 // ==============================
 

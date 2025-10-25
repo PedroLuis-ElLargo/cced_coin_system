@@ -9,6 +9,10 @@ import dashboardModule from "../modules/dashboardModule.js";
 import { NOTIFICATION_TYPES } from "../config.js";
 
 class ModalHandler {
+  constructor() {
+    this.listenersInitialized = false;
+    this.isGeneratingCode = false;
+  }
   init() {
     this.initNewStudentModal();
     this.initNewTaskModal();
@@ -189,9 +193,15 @@ class ModalHandler {
   }
 
   // ==========================================
-  // MODAL: GENERAR CÓDIGO
+  // MODAL: GENERAR CÓDIGO (CORREGIDO)
   // ==========================================
   initGenerateCodeModal() {
+    // ✅ Evitar inicializar múltiples veces
+    if (this.listenersInitialized) {
+      return;
+    }
+    this.listenersInitialized = true;
+
     const closeBtn = document.getElementById("closeGenerateCodeModal");
     const cancelBtn = document.getElementById("cancelGenerateCode");
     const generateBtn = document.getElementById("generateNewCode");
@@ -205,8 +215,7 @@ class ModalHandler {
         e.target.id === "openGenerateCodeModalEmpty" ||
         e.target.closest("#openGenerateCodeModalEmpty")
       ) {
-        uiService.openModal("generateCodeModal");
-        this.generateCode();
+        this.openGenerateCodeModal();
       }
     });
 
@@ -224,33 +233,107 @@ class ModalHandler {
 
     copyBtn?.addEventListener("click", () => {
       const code = document.getElementById("generatedCode").textContent;
-      uiService.copyToClipboard(code, "✅ Código copiado al portapapeles");
+      if (code && code !== "STHELA-2025-XXXX") {
+        uiService.copyToClipboard(code, "✅ Código copiado al portapapeles");
+      } else {
+        uiService.showNotification(
+          "❌ No hay código generado para copiar",
+          NOTIFICATION_TYPES.ERROR
+        );
+      }
     });
   }
 
-  async generateCode() {
-    try {
-      const expirationDate = document.getElementById("codeExpiration")?.value;
-      let dias_validos = null;
+  openGenerateCodeModal() {
+    const dateInput = document.getElementById("codeExpiration");
 
-      if (expirationDate) {
-        const expDate = new Date(expirationDate);
-        const today = new Date();
-        const diffTime = expDate - today;
-        dias_validos = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // Establecer fecha mínima (mañana)
+    if (dateInput) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      dateInput.min = tomorrow.toISOString().split("T")[0];
+
+      // Establecer fecha por defecto (30 días)
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 30);
+      dateInput.value = defaultDate.toISOString().split("T")[0];
+    }
+
+    // Resetear código mostrado
+    const codeEl = document.getElementById("generatedCode");
+    if (codeEl) {
+      codeEl.textContent = "STHELA-2025-XXXX";
+    }
+
+    uiService.openModal("generateCodeModal");
+  }
+
+  async generateCode() {
+    // ✅ Prevenir ejecuciones simultáneas
+    if (this.isGeneratingCode) {
+      console.log("Ya se está generando un código...");
+      return;
+    }
+
+    this.isGeneratingCode = true;
+
+    try {
+      const dateInput = document.getElementById("codeExpiration");
+      const generateBtn = document.getElementById("generateNewCode");
+
+      // Validar que se haya seleccionado una fecha
+      if (!dateInput || !dateInput.value) {
+        uiService.showNotification(
+          "❌ Debes seleccionar una fecha de expiración",
+          NOTIFICATION_TYPES.ERROR
+        );
+        return;
       }
 
-      const data = await apiService.generateCode({ dias_validos });
+      // Validar que la fecha sea futura
+      const selectedDate = new Date(dateInput.value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (selectedDate < today) {
+        uiService.showNotification(
+          "❌ La fecha de expiración debe ser futura",
+          NOTIFICATION_TYPES.ERROR
+        );
+        return;
+      }
+
+      // Deshabilitar botón mientras se genera
+      if (generateBtn) {
+        generateBtn.disabled = true;
+        generateBtn.textContent = "Generando...";
+      }
+
+      // Enviar la fecha directamente como string
+      const data = await apiService.generateCode(dateInput.value);
 
       if (data.success) {
         const codeEl = document.getElementById("generatedCode");
         if (codeEl) {
           codeEl.textContent = data.code;
         }
+
         uiService.showNotification(
           "✅ Código generado exitosamente",
           NOTIFICATION_TYPES.SUCCESS
         );
+
+        // Intentar recargar la lista de códigos
+        try {
+          const codesModule = await import("../modules/codesModule.js");
+          if (codesModule.default && codesModule.default.loadData) {
+            await codesModule.default.loadData();
+          }
+        } catch (err) {
+          console.log(
+            "No se pudo recargar automáticamente la lista de códigos"
+          );
+        }
       } else {
         uiService.showNotification(
           "❌ " + data.message,
@@ -263,6 +346,16 @@ class ModalHandler {
         "❌ Error al generar código",
         NOTIFICATION_TYPES.ERROR
       );
+    } finally {
+      // Restaurar botón
+      const generateBtn = document.getElementById("generateNewCode");
+      if (generateBtn) {
+        generateBtn.disabled = false;
+        generateBtn.textContent = "Generar Nuevo";
+      }
+
+      // ✅ Liberar la bandera
+      this.isGeneratingCode = false;
     }
   }
 }

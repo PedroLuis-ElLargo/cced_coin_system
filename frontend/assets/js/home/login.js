@@ -42,35 +42,36 @@ function checkExistingAuth() {
 }
 
 // ==========================================
-// FUNCIONES DE NOTIFICACIÓN
+// FUNCIONES DE NOTIFICACIÓN (MODIFICADAS)
 // ==========================================
-function showNotification(message, type = "error") {
-  const existingNotification = document.querySelector(".notification");
-  if (existingNotification) {
-    existingNotification.remove();
-  }
+function showFormMessage(message, type = "error", formType = "login") {
+  const messageContainer = document.getElementById(`${formType}-message`);
 
-  const notification = document.createElement("div");
-  notification.className = `notification ${type}`;
-  notification.innerHTML = `
+  if (!messageContainer) return;
+
+  // Limpiar mensaje anterior
+  messageContainer.innerHTML = "";
+  messageContainer.className = "message-container";
+
+  const messageDiv = document.createElement("div");
+  messageDiv.className = `form-message ${type}`;
+  messageDiv.innerHTML = `
     <i class='bx ${
       type === "success" ? "bx-check-circle" : "bx-error-circle"
     }'></i>
     <span>${message}</span>
   `;
 
-  document.body.appendChild(notification);
+  messageContainer.appendChild(messageDiv);
 
-  setTimeout(() => {
-    notification.classList.add("show");
-  }, 100);
-
-  setTimeout(() => {
-    notification.classList.remove("show");
+  // Auto-eliminar después de 4 segundos para mensajes de error
+  if (type === "error") {
     setTimeout(() => {
-      notification.remove();
-    }, 300);
-  }, 4000);
+      if (messageDiv.parentElement) {
+        messageDiv.remove();
+      }
+    }, 4000);
+  }
 }
 
 function showLoading(button, show = true) {
@@ -97,15 +98,18 @@ if (loginForm) {
     const password = document.getElementById("login-password").value;
     const submitBtn = loginForm.querySelector(".btn");
 
+    // Limpiar mensaje anterior
+    showFormMessage("", "error", "login");
+
     // Validaciones
     if (!email || !password) {
-      showNotification("Por favor completa todos los campos", "error");
+      showFormMessage("Por favor completa todos los campos", "error", "login");
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      showNotification("Por favor ingresa un email válido", "error");
+      showFormMessage("Por favor ingresa un email válido", "error", "login");
       return;
     }
 
@@ -123,7 +127,7 @@ if (loginForm) {
       const data = await response.json();
 
       if (data.success) {
-        showNotification(`¡Bienvenido ${data.user.nombre}!`, "success");
+        showFormMessage(`¡Bienvenido ${data.user.nombre}!`, "success", "login");
 
         // Guardar token y datos del usuario
         const userData = {
@@ -149,14 +153,19 @@ if (loginForm) {
           }, 1000);
         }
       } else {
-        showNotification(data.message || "Credenciales incorrectas", "error");
+        showFormMessage(
+          data.message || "Credenciales incorrectas",
+          "error",
+          "login"
+        );
         showLoading(submitBtn, false);
       }
     } catch (error) {
       console.error("❌ Error en login:", error);
-      showNotification(
+      showFormMessage(
         "Error de conexión. Verifica que el servidor esté corriendo en el puerto 4000.",
-        "error"
+        "error",
+        "login"
       );
       showLoading(submitBtn, false);
     }
@@ -181,30 +190,39 @@ if (registerForm) {
       .toUpperCase();
     const submitBtn = registerForm.querySelector(".btn");
 
+    // Limpiar mensaje anterior
+    showFormMessage("", "error", "register");
+
     // Validaciones
     if (!nombre || !email || !password || !registrationCode) {
-      showNotification("Por favor completa todos los campos", "error");
+      showFormMessage(
+        "Por favor completa todos los campos",
+        "error",
+        "register"
+      );
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      showNotification("Por favor ingresa un email válido", "error");
+      showFormMessage("Por favor ingresa un email válido", "error", "register");
       return;
     }
 
     if (password.length < 6) {
-      showNotification(
+      showFormMessage(
         "La contraseña debe tener al menos 6 caracteres",
-        "error"
+        "error",
+        "register"
       );
       return;
     }
 
     if (!registrationCode.startsWith("STHELA-")) {
-      showNotification(
+      showFormMessage(
         "El código debe tener el formato STHELA-XXXX-XXXX",
-        "error"
+        "error",
+        "register"
       );
       return;
     }
@@ -223,7 +241,11 @@ if (registerForm) {
       const data = await response.json();
 
       if (data.success) {
-        showNotification("¡Registro exitoso! Redirigiendo...", "success");
+        showFormMessage(
+          "¡Registro exitoso! Redirigiendo...",
+          "success",
+          "register"
+        );
 
         localStorage.setItem("studentToken", data.token);
         localStorage.setItem(
@@ -242,14 +264,19 @@ if (registerForm) {
           window.location.href = ROUTES.STUDENT_DASHBOARD;
         }, 1500);
       } else {
-        showNotification(data.message || "Error al registrarse", "error");
+        showFormMessage(
+          data.message || "Error al registrarse",
+          "error",
+          "register"
+        );
         showLoading(submitBtn, false);
       }
     } catch (error) {
       console.error("❌ Error en registro:", error);
-      showNotification(
+      showFormMessage(
         "Error de conexión. Verifica que el servidor esté corriendo en el puerto 4000.",
-        "error"
+        "error",
+        "register"
       );
       showLoading(submitBtn, false);
     }

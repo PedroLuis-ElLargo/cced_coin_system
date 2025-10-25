@@ -7,6 +7,10 @@ import uiService from "../services/uiService.js";
 import { NOTIFICATION_TYPES } from "../config.js";
 
 class CodesModule {
+  constructor() {
+    this.lastGeneratedCode = null;
+  }
+
   render() {
     const content = `
       <div class="space-y-6">
@@ -85,6 +89,7 @@ class CodesModule {
 
   createCodeCard(code) {
     const stateConfig = this.getStateConfig(code.estado);
+    const canModify = code.estado === "activo";
 
     return `
       <div class="bg-white p-6 rounded-xl shadow-lg border-2 ${
@@ -114,13 +119,12 @@ class CodesModule {
             data-action="copy"
             data-code="${code.codigo}"
             class="flex-1 px-3 py-2 text-sm bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-lg transition-colors"
+            title="Copiar código"
           >
             <i data-lucide="copy" class="w-4 h-4 inline mr-1"></i>
             Copiar
           </button>
-          ${
-            code.estado === "activo" ? this.renderDeactivateButton(code.id) : ""
-          }
+          ${canModify ? this.renderModifyButtons(code.id) : ""}
         </div>
       </div>
     `;
@@ -185,14 +189,23 @@ class CodesModule {
     `;
   }
 
-  renderDeactivateButton(codeId) {
+  renderModifyButtons(codeId) {
     return `
       <button 
-        data-action="deactivate"
+        data-action="update-expiration"
+        data-id="${codeId}"
+        class="px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
+        title="Modificar fecha de expiración"
+      >
+        <i data-lucide="calendar-clock" class="w-4 h-4 inline"></i>
+      </button>
+      <button 
+        data-action="delete"
         data-id="${codeId}"
         class="px-3 py-2 text-sm bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
+        title="Eliminar código"
       >
-        <i data-lucide="x-circle" class="w-4 h-4 inline"></i>
+        <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
       </button>
     `;
   }
@@ -201,54 +214,283 @@ class CodesModule {
   // CONFIGURAR EVENT LISTENERS
   // ==========================================
   setupEventListeners() {
-    // Open generate modal buttons
+    // Abrir modal de generar código
     const openGen = document.getElementById("openGenerateCodeModal");
-    if (openGen)
-      openGen.addEventListener("click", () =>
-        uiService.openModal("generateCodeModal")
-      );
+    if (openGen) {
+      openGen.addEventListener("click", () => this.openGenerateModal());
+    }
 
     const openGenEmpty = document.getElementById("openGenerateCodeModalEmpty");
-    if (openGenEmpty)
-      openGenEmpty.addEventListener("click", () =>
-        uiService.openModal("generateCodeModal")
-      );
+    if (openGenEmpty) {
+      openGenEmpty.addEventListener("click", () => this.openGenerateModal());
+    }
+
+    // Cerrar modal
+    const closeModal = document.getElementById("closeGenerateCodeModal");
+    if (closeModal) {
+      closeModal.addEventListener("click", () => this.closeGenerateModal());
+    }
+
+    const cancelBtn = document.getElementById("cancelGenerateCode");
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", () => this.closeGenerateModal());
+    }
+
+    // Generar código
+    const generateBtn = document.getElementById("generateNewCode");
+    if (generateBtn) {
+      generateBtn.addEventListener("click", () => this.handleGenerateCode());
+    }
+
+    // Copiar código generado
+    const copyBtn = document.getElementById("copyCodeButton");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", () => this.copyGeneratedCode());
+    }
 
     // Retry load
     const retryBtn = document.getElementById("retryLoadCodesBtn");
-    if (retryBtn) retryBtn.addEventListener("click", () => this.loadData());
+    if (retryBtn) {
+      retryBtn.addEventListener("click", () => this.loadData());
+    }
 
-    // Delegate copy/deactivate actions
+    // Acciones de códigos (copiar, editar, eliminar)
     const container = document.getElementById("codesContainer");
     if (container) {
       container.addEventListener("click", (e) => {
         const btn = e.target.closest("button[data-action]");
         if (!btn) return;
+
         const action = btn.getAttribute("data-action");
-        if (action === "copy") {
-          const code = btn.getAttribute("data-code");
-          this.copy(code);
-        } else if (action === "deactivate") {
-          const id = btn.getAttribute("data-id");
-          this.deactivate(Number(id));
+        const id = btn.getAttribute("data-id");
+        const code = btn.getAttribute("data-code");
+
+        switch (action) {
+          case "copy":
+            this.copy(code);
+            break;
+          case "update-expiration":
+            this.showUpdateExpirationDialog(Number(id));
+            break;
+          case "delete":
+            this.delete(Number(id));
+            break;
         }
       });
     }
   }
 
+  // ==========================================
+  // GESTIÓN DEL MODAL DE GENERACIÓN
+  // ==========================================
+  openGenerateModal() {
+    const modal = document.getElementById("generateCodeModal");
+    const backdrop = modal;
+    const content = modal.querySelector(".modal-content");
+
+    if (!modal) return;
+
+    // Resetear modal
+    this.resetGenerateModal();
+
+    // Establecer fecha mínima (hoy)
+    const dateInput = document.getElementById("codeExpiration");
+    if (dateInput) {
+      const today = new Date();
+      today.setDate(today.getDate() + 1); // Mínimo mañana
+      dateInput.min = today.toISOString().split("T")[0];
+
+      // Establecer fecha por defecto (30 días)
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 30);
+      dateInput.value = defaultDate.toISOString().split("T")[0];
+    }
+
+    // Mostrar modal con animación
+    modal.classList.remove("hidden");
+    setTimeout(() => {
+      backdrop.classList.remove("opacity-0");
+      content.classList.remove("scale-95", "opacity-0");
+    }, 10);
+
+    lucide.createIcons();
+  }
+
+  closeGenerateModal() {
+    const modal = document.getElementById("generateCodeModal");
+    const backdrop = modal;
+    const content = modal.querySelector(".modal-content");
+
+    if (!modal) return;
+
+    // Animación de cierre
+    backdrop.classList.add("opacity-0");
+    content.classList.add("scale-95", "opacity-0");
+
+    setTimeout(() => {
+      modal.classList.add("hidden");
+    }, 300);
+  }
+
+  resetGenerateModal() {
+    const codeDisplay = document.getElementById("generatedCode");
+    if (codeDisplay) {
+      codeDisplay.textContent = "STHELA-2024-XXXX";
+      codeDisplay.classList.remove("text-purple-600");
+      codeDisplay.classList.add("text-slate-400");
+    }
+
+    const dateInput = document.getElementById("codeExpiration");
+    if (dateInput) {
+      dateInput.value = "";
+    }
+
+    this.lastGeneratedCode = null;
+  }
+
+  async handleGenerateCode() {
+    const dateInput = document.getElementById("codeExpiration");
+    const generateBtn = document.getElementById("generateNewCode");
+
+    if (!dateInput || !dateInput.value) {
+      uiService.showNotification(
+        "❌ Debes seleccionar una fecha de expiración",
+        NOTIFICATION_TYPES.ERROR
+      );
+      return;
+    }
+
+    // Validar que la fecha sea futura
+    const selectedDate = new Date(dateInput.value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      uiService.showNotification(
+        "❌ La fecha de expiración debe ser futura",
+        NOTIFICATION_TYPES.ERROR
+      );
+      return;
+    }
+
+    // Deshabilitar botón
+    if (generateBtn) {
+      generateBtn.disabled = true;
+      generateBtn.innerHTML = `
+      <i data-lucide="loader" class="w-4 h-4 inline mr-2 animate-spin"></i>
+      Generando...
+    `;
+      lucide.createIcons();
+    }
+
+    try {
+      // ✅ ENVIAR LA FECHA COMO STRING (dateInput.value ya es un string "YYYY-MM-DD")
+      const data = await apiService.generateCode(dateInput.value);
+
+      if (data.success) {
+        // Mostrar código generado
+        const codeDisplay = document.getElementById("generatedCode");
+        if (codeDisplay) {
+          codeDisplay.textContent = data.code;
+          codeDisplay.classList.remove("text-slate-400");
+          codeDisplay.classList.add("text-purple-600");
+        }
+
+        this.lastGeneratedCode = data.code;
+
+        uiService.showNotification(
+          "✅ Código generado exitosamente",
+          NOTIFICATION_TYPES.SUCCESS
+        );
+
+        // Recargar lista en segundo plano
+        this.loadData();
+      } else {
+        uiService.showNotification(
+          "❌ " + data.message,
+          NOTIFICATION_TYPES.ERROR
+        );
+      }
+    } catch (error) {
+      console.error("Error generando código:", error);
+      uiService.showNotification(
+        "❌ Error al generar código",
+        NOTIFICATION_TYPES.ERROR
+      );
+    } finally {
+      // Restaurar botón
+      if (generateBtn) {
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = "Generar Nuevo";
+      }
+    }
+  }
+
+  copyGeneratedCode() {
+    if (!this.lastGeneratedCode) {
+      uiService.showNotification(
+        "❌ No hay código generado para copiar",
+        NOTIFICATION_TYPES.ERROR
+      );
+      return;
+    }
+
+    uiService.copyToClipboard(
+      this.lastGeneratedCode,
+      "✅ Código copiado al portapapeles"
+    );
+  }
+
+  // ==========================================
+  // ACCIONES DE CÓDIGOS
+  // ==========================================
   copy(code) {
     uiService.copyToClipboard(code, "✅ Código copiado al portapapeles");
   }
 
-  async deactivate(codeId) {
-    if (!confirm("¿Estás seguro de desactivar este código?")) return;
+  showUpdateExpirationDialog(codeId) {
+    const fecha = prompt(
+      "Ingresa la nueva fecha de expiración (formato: YYYY-MM-DD)\nEjemplo: 2025-12-31"
+    );
 
+    if (fecha === null) return;
+
+    // Validar formato de fecha
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(fecha)) {
+      uiService.showNotification(
+        "❌ Formato de fecha inválido. Usa YYYY-MM-DD",
+        NOTIFICATION_TYPES.ERROR
+      );
+      return;
+    }
+
+    // Validar que sea fecha futura
+    const selectedDate = new Date(fecha);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      uiService.showNotification(
+        "❌ La fecha debe ser futura",
+        NOTIFICATION_TYPES.ERROR
+      );
+      return;
+    }
+
+    this.updateExpiration(codeId, fecha);
+  }
+
+  async updateExpiration(codeId, fechaExpiracion) {
     try {
-      const data = await apiService.deactivateCode(codeId);
+      const data = await apiService.updateCodeExpiration(
+        codeId,
+        fechaExpiracion
+      );
 
       if (data.success) {
         uiService.showNotification(
-          "✅ Código desactivado exitosamente",
+          "✅ Fecha de expiración actualizada exitosamente",
           NOTIFICATION_TYPES.SUCCESS
         );
         this.loadData();
@@ -259,9 +501,41 @@ class CodesModule {
         );
       }
     } catch (error) {
-      console.error("Error desactivando código:", error);
+      console.error("Error actualizando fecha de expiración:", error);
       uiService.showNotification(
-        "❌ Error al desactivar código",
+        "❌ Error al actualizar fecha de expiración",
+        NOTIFICATION_TYPES.ERROR
+      );
+    }
+  }
+
+  async delete(codeId) {
+    if (
+      !confirm(
+        "¿Estás seguro de eliminar este código?\n\nEsta acción no se puede deshacer."
+      )
+    )
+      return;
+
+    try {
+      const data = await apiService.deleteCode(codeId);
+
+      if (data.success) {
+        uiService.showNotification(
+          "✅ Código eliminado exitosamente",
+          NOTIFICATION_TYPES.SUCCESS
+        );
+        this.loadData();
+      } else {
+        uiService.showNotification(
+          "❌ " + data.message,
+          NOTIFICATION_TYPES.ERROR
+        );
+      }
+    } catch (error) {
+      console.error("Error eliminando código:", error);
+      uiService.showNotification(
+        "❌ Error al eliminar código",
         NOTIFICATION_TYPES.ERROR
       );
     }

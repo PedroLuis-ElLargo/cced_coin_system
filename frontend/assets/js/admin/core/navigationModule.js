@@ -8,7 +8,8 @@ import tasksModule from "../modules/tasksModule.js";
 import { examenesModule } from "../modules/examenesModule.js";
 import monedasModule from "../modules/monedasModule.js";
 import codesModule from "../modules/codesModule.js";
-
+import rankingModule from "../modules/rankingModule.js";
+import reportesModule from "../modules/reportesModule.js";
 class NavigationModule {
   constructor() {
     this.modules = {
@@ -17,18 +18,20 @@ class NavigationModule {
       tasks: tasksModule,
       exams: examenesModule,
       coins: monedasModule,
-      codes: codesModule
+      codes: codesModule,
+      ranking: rankingModule,
+      reportes: reportesModule,
     };
-    
-    this.currentModule = 'dashboard';
+
+    this.currentModule = "dashboard";
     this.init();
   }
 
   init() {
     // Agregar event listeners a los elementos de navegación
-    const navItems = document.querySelectorAll('.sidebar-nav-items a');
-    navItems.forEach(item => {
-      item.addEventListener('click', (e) => {
+    const navItems = document.querySelectorAll(".sidebar-nav-items a");
+    navItems.forEach((item) => {
+      item.addEventListener("click", (e) => {
         e.preventDefault();
         const moduleId = this.getModuleIdFromMenuItem(item);
         if (moduleId) {
@@ -38,18 +41,22 @@ class NavigationModule {
     });
 
     // Activar el módulo inicial (dashboard)
-    this.navigateTo('dashboard');
+    this.navigateTo("dashboard");
   }
 
   getModuleIdFromMenuItem(menuItem) {
-    const menuText = menuItem.querySelector('.menu-text').textContent.toLowerCase();
+    const menuText = menuItem
+      .querySelector(".menu-text")
+      .textContent.toLowerCase();
     const moduleMap = {
-      'dashboard': 'dashboard',
-      'estudiantes': 'students',
-      'tareas': 'tasks',
-      'exámenes': 'exams',
-      'monedas': 'coins',
-      'códigos acceso': 'codes'
+      dashboard: "dashboard",
+      estudiantes: "students",
+      tareas: "tasks",
+      exámenes: "exams",
+      monedas: "coins",
+      "códigos acceso": "codes",
+      rankings: "ranking",
+      reportes: "reportes",
     };
     return moduleMap[menuText];
   }
@@ -67,14 +74,14 @@ class NavigationModule {
     this.updateActiveNavItem(moduleId);
 
     // Limpiar el contenido principal
-    const mainContent = document.getElementById('main-content');
+    const mainContent = document.getElementById("main-content");
     if (mainContent) {
-      mainContent.innerHTML = '';
+      mainContent.innerHTML = "";
     }
 
     // Renderizar el nuevo módulo
     const module = this.modules[moduleId];
-    if (module && typeof module.render === 'function') {
+    if (module && typeof module.render === "function") {
       try {
         await module.render();
       } catch (error) {
@@ -85,21 +92,26 @@ class NavigationModule {
 
   updateActiveNavItem(moduleId) {
     // Remover clase activa de todos los items
-    const navItems = document.querySelectorAll('.sidebar-nav-items a');
-    navItems.forEach(item => {
-      item.classList.remove('bg-slate-700', 'text-white');
-      item.classList.add('text-slate-300');
+    const navItems = document.querySelectorAll(".sidebar-nav-items a");
+    navItems.forEach((item) => {
+      item.classList.remove("bg-slate-700", "text-white");
+      item.classList.add("text-slate-300");
     });
 
     // Encontrar y activar el item correspondiente al módulo actual
-    const moduleText = Object.entries(this.modules).find(([key]) => key === moduleId)?.[1]?.name || moduleId;
-    const activeItem = Array.from(navItems).find(item => 
-      item.querySelector('.menu-text').textContent.toLowerCase().includes(moduleText.toLowerCase())
+    const moduleText =
+      Object.entries(this.modules).find(([key]) => key === moduleId)?.[1]
+        ?.name || moduleId;
+    const activeItem = Array.from(navItems).find((item) =>
+      item
+        .querySelector(".menu-text")
+        .textContent.toLowerCase()
+        .includes(moduleText.toLowerCase())
     );
 
     if (activeItem) {
-      activeItem.classList.remove('text-slate-300');
-      activeItem.classList.add('bg-slate-700', 'text-white');
+      activeItem.classList.remove("text-slate-300");
+      activeItem.classList.add("bg-slate-700", "text-white");
     }
   }
 }

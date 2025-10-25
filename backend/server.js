@@ -9,12 +9,18 @@ require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
 
-// Crear carpeta uploads si no existe
-const uploadsDir = path.join(__dirname, "../uploads/exams");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log("✅ Carpeta uploads/exams creada");
-}
+// Crear carpetas uploads si no existen
+const uploadsDirs = [
+  path.join(__dirname, "uploads/exams"),
+  path.join(__dirname, "uploads/tasks"),
+];
+
+uploadsDirs.forEach((dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    console.log(`✅ Carpeta ${dir} creada`);
+  }
+});
 
 const app = express();
 const publicRoutes = require("./routes/public");

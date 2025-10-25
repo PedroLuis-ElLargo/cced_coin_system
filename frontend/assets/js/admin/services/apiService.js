@@ -1,5 +1,5 @@
 // ==========================================
-// API-SERVICE.JS - Servicio de API
+// API-SERVICE.JS - Servicio de API ACTUALIZADO
 // ==========================================
 
 import { CONFIG } from "../config.js";
@@ -55,6 +55,7 @@ class ApiService {
       body: JSON.stringify(studentData),
     });
   }
+
   async updateStudent(id, studentData) {
     return this.request(`/admin/students/${id}`, {
       method: "PUT",
@@ -68,7 +69,9 @@ class ApiService {
     });
   }
 
-  // Tareas
+  // ==========================================
+  // TAREAS
+  // ==========================================
   async getTasks() {
     return this.request("/admin/tasks");
   }
@@ -79,6 +82,7 @@ class ApiService {
       body: JSON.stringify(taskData),
     });
   }
+
   async updateTask(id, taskData) {
     return this.request(`/admin/tasks/${id}`, {
       method: "PUT",
@@ -92,7 +96,53 @@ class ApiService {
     });
   }
 
-  // Códigos
+  // ==========================================
+  // ARCHIVOS DE TAREAS (NUEVO)
+  // ==========================================
+
+  async uploadTaskFiles(taskId, formData) {
+    try {
+      const response = await fetch(
+        `${this.baseURL}/admin/tasks/${taskId}/files`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${authService.getToken()}`,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Error al subir archivos");
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error subiendo archivos:", error);
+      throw error;
+    }
+  }
+
+  async getTaskFiles(taskId) {
+    return this.request(`/admin/tasks/${taskId}/files`);
+  }
+
+  async deleteTaskFile(taskId, fileId) {
+    return this.request(`/admin/tasks/files/${fileId}`, {
+      method: "DELETE",
+    });
+  }
+
+  getFileDownloadUrl(taskId, fileId) {
+    return `${this.baseURL}/admin/tasks/files/${fileId}/download`;
+  }
+
+  // ==========================================
+  // CÓDIGOS
+  // ==========================================
   async getCodes() {
     return this.request("/admin/codes");
   }
@@ -111,7 +161,7 @@ class ApiService {
   }
 
   // ==========================================
-  // MONEDAS (NUEVO)
+  // MONEDAS
   // ==========================================
   async addCoinsToStudent(studentId, amount, reason) {
     return this.request("/admin/coins/add", {

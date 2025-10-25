@@ -653,6 +653,200 @@ exports.assignTask = async (req, res) => {
   }
 };
 
+// ==========================================
+// GESTIÓN DE ARCHIVOS DE TAREAS
+// ==========================================
+
+// ===== OBTENER ARCHIVOS DE UNA TAREA =====
+exports.getTaskFiles = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const files = await query(
+      `
+      SELECT 
+        tf.*,
+        u.nombre as subido_por_nombre
+      FROM task_files tf
+      LEFT JOIN users u ON tf.subido_por = u.id
+      WHERE tf.task_id = ?
+      ORDER BY tf.fecha_subida DESC
+    `,
+      [id]
+    );
+
+    res.json({
+      success: true,
+      files: files,
+    });
+  } catch (error) {
+    console.error("Error al obtener archivos de tarea:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener archivos de tarea",
+    });
+  }
+};
+
+// ===== SUBIR ARCHIVOS A UNA TAREA =====
+exports.uploadTaskFiles = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const files = req.files;
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No se proporcionaron archivos",
+      });
+    }
+
+    // Verificar que la tarea existe
+    const task = await query("SELECT id FROM tasks WHERE id = ?", [id]);
+    if (task.length === 0) {
+      // Si la tarea no existe, eliminar archivos subidos
+      for (const file of files) {
+        try {
+          await fs.unlink(file.path);
+        } catch (err) {
+          console.error("Error eliminando archivo:", err);
+        }
+      }
+
+      return res.status(404).json({
+        success: false,
+        message: "Tarea no encontrada",
+      });
+    }
+
+    const uploadedFiles = [];
+
+    for (const file of files) {
+      const result = await query(
+        `
+        INSERT INTO task_files 
+        (task_id, nombre_archivo, nombre_original, ruta_archivo, tipo_archivo, tamanio, subido_por)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `,
+        [
+          id,
+          file.filename,
+          file.originalname,
+          file.path,
+          file.mimetype,
+          file.size,
+          req.user.id,
+        ]
+      );
+
+      uploadedFiles.push({
+        id: result.insertId,
+        nombre: file.originalname,
+        tamano: file.size,
+        tipo: file.mimetype,
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `${files.length} archivo(s) subido(s) exitosamente`,
+      files: uploadedFiles,
+    });
+  } catch (error) {
+    console.error("Error al subir archivos de tarea:", error);
+
+    // Intentar limpiar archivos si hubo error
+    if (req.files) {
+      for (const file of req.files) {
+        try {
+          await fs.unlink(file.path);
+        } catch (err) {
+          console.error("Error eliminando archivo:", err);
+        }
+      }
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Error al subir archivos de tarea",
+    });
+  }
+};
+
+// ===== DESCARGAR ARCHIVO DE TAREA =====
+exports.downloadTaskFile = async (req, res) => {
+  try {
+    const { fileId } = req.params;
+
+    const file = await query("SELECT * FROM task_files WHERE id = ?", [fileId]);
+
+    if (file.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Archivo no encontrado",
+      });
+    }
+
+    const filePath = path.resolve(file[0].ruta_archivo);
+
+    // Verificar que el archivo existe físicamente
+    try {
+      await fs.access(filePath);
+    } catch (error) {
+      return res.status(404).json({
+        success: false,
+        message: "Archivo no encontrado en el servidor",
+      });
+    }
+
+    res.download(filePath, file[0].nombre_original);
+  } catch (error) {
+    console.error("Error al descargar archivo de tarea:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al descargar archivo",
+    });
+  }
+};
+
+// ===== ELIMINAR ARCHIVO DE TAREA =====
+exports.deleteTaskFile = async (req, res) => {
+  try {
+    const { fileId } = req.params;
+
+    const file = await query("SELECT * FROM task_files WHERE id = ?", [fileId]);
+
+    if (file.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Archivo no encontrado",
+      });
+    }
+
+    // Intentar eliminar archivo físico
+    try {
+      await fs.unlink(file[0].ruta_archivo);
+    } catch (err) {
+      console.error("Error al eliminar archivo físico:", err);
+      // Continuar para eliminar el registro de la BD de todos modos
+    }
+
+    // Eliminar registro de la base de datos
+    await query("DELETE FROM task_files WHERE id = ?", [fileId]);
+
+    res.json({
+      success: true,
+      message: "Archivo eliminado exitosamente",
+    });
+  } catch (error) {
+    console.error("Error al eliminar archivo de tarea:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al eliminar archivo",
+    });
+  }
+};
+
 // ==============================
 // GESTIÓN DE EXÁMENES
 // ==============================

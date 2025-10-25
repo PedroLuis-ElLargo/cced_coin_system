@@ -1,17 +1,7 @@
 # ignorar los archivos de dependencias
 node_modules/
-# ignorar los archivos de construcciÃ³n
-dist/
-build/
-*.exe
-*.msi
-*.dmg
-*.deb
-*.rpm
-*.zip
-*.tar.gz
 
-# ignorar los archivos de configuraciÃ³n local
+# ignorar los archivos de configuracion local
 .env
 config.local.json
 
@@ -20,6 +10,7 @@ config.local.json
 logs/
 
 # ignorar los archivos temporales
+uploads/
 tmp/
 temp/
 *.tmp
@@ -27,3 +18,14 @@ temp/
 # ignorar los archivos de base de datos
 *.db
 *.sqlite
+*.sql
+
+# ignorar los archivos y carpetas del sistema e imagenes
+.DS_Store
+Thumbs.db
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico

@@ -12,7 +12,18 @@ const path = require("path");
 // Configuración de Multer para archivos
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/exams/");
+    // Determinar carpeta según la ruta
+    let uploadPath = "uploads/";
+
+    if (req.path.includes("/exams/")) {
+      uploadPath += "exams/";
+    } else if (req.path.includes("/tasks/")) {
+      uploadPath += "tasks/";
+    } else {
+      uploadPath += "general/";
+    }
+
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -24,7 +35,7 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /pdf|doc|docx|xls|xlsx|txt|zip/;
+    const allowedTypes = /pdf|doc|docx|xls|xlsx|txt|zip|jpg|jpeg|png/;
     const extname = allowedTypes.test(
       path.extname(file.originalname).toLowerCase()
     );
@@ -93,6 +104,26 @@ router.delete("/tasks/:id", adminController.deleteTask);
 
 // POST /api/admin/tasks/assign - Asignar tarea a estudiante(s)
 router.post("/tasks/assign", adminController.assignTask);
+
+// ==============================
+// GESTIÓN DE ARCHIVOS DE TAREAS
+// ==============================
+
+// Obtener archivos de una tarea
+router.get("/tasks/:id/files", adminController.getTaskFiles);
+
+// Subir archivos a una tarea
+router.post(
+  "/tasks/:id/files",
+  upload.array("files", 10),
+  adminController.uploadTaskFiles
+);
+
+// Descargar archivo de tarea
+router.get("/tasks/files/:fileId/download", adminController.downloadTaskFile);
+
+// Eliminar archivo de tarea
+router.delete("/tasks/files/:fileId", adminController.deleteTaskFile);
 
 // ==============================
 // GESTIÓN DE EXÁMENES

@@ -202,6 +202,116 @@ class ApiService {
   async getTransactions() {
     return this.request("/admin/transactions");
   }
+
+  // ==========================================
+  // MÉTODOS DE CALIFICACIONES
+  // ==========================================
+
+  // Periodos Escolares
+  async getPeriodos() {
+    return this.request("/admin/periodos", { method: "GET" });
+  }
+
+  async getPeriodoActivo() {
+    return this.request("/admin/periodos/activo", { method: "GET" });
+  }
+
+  async createPeriodo(periodoData) {
+    return this.request("/admin/periodos", {
+      method: "POST",
+      body: JSON.stringify(periodoData),
+    });
+  }
+
+  // Materias
+  async getMaterias(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/admin/materias?${query}`, { method: "GET" });
+  }
+
+  async createMateria(materiaData) {
+    return this.request("/admin/materias", {
+      method: "POST",
+      body: JSON.stringify(materiaData),
+    });
+  }
+
+  // Resultados de Aprendizaje
+  async getResultadosAprendizaje(materiaId) {
+    return this.request(`/admin/materias/${materiaId}/resultados`, {
+      method: "GET",
+    });
+  }
+
+  async createResultadosAprendizaje(materiaId, resultados) {
+    return this.request(`/admin/materias/${materiaId}/resultados`, {
+      method: "POST",
+      body: JSON.stringify({ resultados }),
+    });
+  }
+
+  // Inscripciones
+  async inscribirEstudiante(inscripcionData) {
+    return this.request("/admin/inscripciones", {
+      method: "POST",
+      body: JSON.stringify(inscripcionData),
+    });
+  }
+
+  async getInscripcionesEstudiante(estudianteId, periodoId = null) {
+    const query = periodoId ? `?periodoId=${periodoId}` : "";
+    return this.request(
+      `/admin/inscripciones/estudiante/${estudianteId}${query}`,
+      {
+        method: "GET",
+      }
+    );
+  }
+
+  // Calificaciones Académicas
+  async registrarCalificacionAcademica(calificacionData) {
+    return this.request("/admin/calificaciones/academicas", {
+      method: "POST",
+      body: JSON.stringify(calificacionData),
+    });
+  }
+
+  async getCalificacionesAcademicas(inscripcionId) {
+    return this.request(`/admin/calificaciones/academicas/${inscripcionId}`, {
+      method: "GET",
+    });
+  }
+
+  // Calificaciones Módulos Formativos
+  async registrarCalificacionModulo(calificacionData) {
+    return this.request("/admin/calificaciones/modulos", {
+      method: "POST",
+      body: JSON.stringify(calificacionData),
+    });
+  }
+
+  async getCalificacionesModulo(inscripcionId) {
+    return this.request(`/admin/calificaciones/modulos/${inscripcionId}`, {
+      method: "GET",
+    });
+  }
+
+  // Reportes
+  async getReporteEstudiante(estudianteId, periodoId) {
+    return this.request(
+      `/admin/reportes/estudiante/${estudianteId}/periodo/${periodoId}`,
+      {
+        method: "GET",
+      }
+    );
+  }
+
+  async getListadoEstudiantes(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/admin/reportes/listado?${query}`, {
+      method: "GET",
+    });
+  }
 }
 
 export default new ApiService();

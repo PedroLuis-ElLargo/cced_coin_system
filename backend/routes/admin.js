@@ -5,9 +5,23 @@
 const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/adminController");
-const { verifyToken, verifyAdmin } = require("../middleware/auth");
+const gradesController = require("../controllers/admin/gradesController.js");
+const {
+  verifyToken,
+  verifyAdmin,
+  verifyRoles,
+  verifyStudentAccess,
+} = require("../middleware/auth");
 const multer = require("multer");
 const path = require("path");
+
+// ✅ AGREGAR ESTAS LÍNEAS DE DEBUG
+console.log("🔍 gradesController cargado:", !!gradesController);
+console.log("🔍 Métodos disponibles:", Object.keys(gradesController));
+console.log(
+  "🔍 getPeriodoActivo existe:",
+  typeof gradesController.getPeriodoActivo
+);
 
 // Configuración de Multer para archivos
 const storage = multer.diskStorage({
@@ -53,6 +67,107 @@ const upload = multer({
 // Aplicar middleware de autenticación y verificación de admin a todas las rutas
 router.use(verifyToken);
 router.use(verifyAdmin);
+
+// ✅ AGREGAR ESTE LOG DESPUÉS DE LOS MIDDLEWARES
+router.use((req, res, next) => {
+  console.log(`📍 Ruta alcanzada: ${req.method} /api/admin${req.path}`);
+  next();
+});
+
+// ==========================================
+// PERIODOS ESCOLARES
+// ==========================================
+router.get("/periodos", gradesController.getPeriodos);
+router.get("/periodos/activo", gradesController.getPeriodoActivo);
+router.post("/periodos", verifyAdmin, gradesController.createPeriodo);
+
+// ==========================================
+// MATERIAS
+// ==========================================
+router.get("/materias", gradesController.getMaterias);
+router.post("/materias", verifyAdmin, gradesController.createMateria);
+
+// ==========================================
+// RESULTADOS DE APRENDIZAJE
+// ==========================================
+router.get(
+  "/materias/:materiaId/resultados",
+  gradesController.getResultadosAprendizaje
+);
+router.post(
+  "/materias/:materiaId/resultados",
+  verifyAdmin,
+  gradesController.createResultadosAprendizaje
+);
+
+// ==========================================
+// INSCRIPCIONES
+// ==========================================
+router.post(
+  "/inscripciones",
+  verifyAdmin,
+  gradesController.inscribirEstudiante
+);
+
+// ✅ Estudiantes pueden ver sus propias inscripciones, admin puede ver todas
+router.get(
+  "/inscripciones/estudiante/:estudianteId",
+  verifyStudentAccess,
+  gradesController.getInscripcionesEstudiante
+);
+
+// ==========================================
+// CALIFICACIONES ACADÉMICAS
+// ==========================================
+// Solo admin puede registrar/editar calificaciones
+router.post(
+  "/calificaciones/academicas",
+  verifyAdmin,
+  gradesController.registrarCalificacionAcademica
+);
+
+// ✅ Si quieres permitir que docentes también registren calificaciones:
+// router.post("/calificaciones/academicas", verifyRoles('admin', 'docente'), gradesController.registrarCalificacionAcademica);
+
+// Cualquier usuario autenticado puede ver (se valida acceso en el controlador)
+router.get(
+  "/calificaciones/academicas/:inscripcionId",
+  gradesController.getCalificacionesAcademicas
+);
+
+// ==========================================
+// CALIFICACIONES MÓDULOS FORMATIVOS
+// ==========================================
+router.post(
+  "/calificaciones/modulos",
+  verifyAdmin,
+  gradesController.registrarCalificacionModulo
+);
+
+// ✅ Si quieres permitir que docentes también registren:
+// router.post("/calificaciones/modulos", verifyRoles('admin', 'docente'), gradesController.registrarCalificacionModulo);
+
+router.get(
+  "/calificaciones/modulos/:inscripcionId",
+  gradesController.getCalificacionesModulo
+);
+
+// ==========================================
+// REPORTES
+// ==========================================
+// ✅ Estudiantes pueden ver su propio reporte, admin puede ver todos
+router.get(
+  "/reportes/estudiante/:estudianteId/periodo/:periodoId",
+  verifyStudentAccess,
+  gradesController.getReporteEstudiante
+);
+
+// Solo admin puede ver listados generales
+router.get(
+  "/reportes/listado",
+  verifyAdmin,
+  gradesController.getListadoEstudiantes
+);
 
 // ==============================
 // GESTIÓN DE ESTUDIANTES

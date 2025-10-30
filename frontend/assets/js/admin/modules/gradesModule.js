@@ -528,8 +528,9 @@ class GradesModule {
             });
           }
         } catch (error) {
-          console.log(
-            `Estudiante ${student.nombre} no inscrito en esta materia`
+          uiService.showNotification(
+            `⚠️ No se pudieron cargar las calificaciones de ${student.nombre}`,
+            NOTIFICATION_TYPES.ERROR
           );
         }
       }
@@ -914,8 +915,9 @@ class GradesModule {
             });
           }
         } catch (error) {
-          console.log(
-            `Estudiante ${student.nombre} no inscrito en este módulo`
+          uiService.showNotification(
+            `⚠️ No se pudieron cargar las calificaciones de ${student.nombre}`,
+            NOTIFICATION_TYPES.ERROR
           );
         }
       }
@@ -945,67 +947,472 @@ class GradesModule {
     }
   }
 
+  // renderModuloGradesTable(estudiantes, materia, resultadosAprendizaje) {
+  //   const container = document.getElementById("moduloGradesContainer");
+
+  //   container.innerHTML = `
+  //     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+  //       <div class="p-6 bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
+  //         <h4 class="text-xl font-bold">${materia.nombre}</h4>
+  //         <p class="text-purple-100">Total de estudiantes: ${
+  //           estudiantes.length
+  //         } | RAs: ${resultadosAprendizaje.length}</p>
+  //       </div>
+
+  //       <!-- Selector de estudiante -->
+  //       <div class="p-4 bg-slate-50 border-b border-slate-200">
+  //         <label class="block text-sm font-medium text-slate-700 mb-2">Seleccionar Estudiante para Ver Detalle</label>
+  //         <select id="estudianteModuloSelect" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+  //           <option value="">Ver todos...</option>
+  //           ${estudiantes
+  //             .map(
+  //               (e) => `
+  //             <option value="${e.id}">${e.nombre}</option>
+  //           `
+  //             )
+  //             .join("")}
+  //         </select>
+  //       </div>
+
+  //       <!-- Tabla de RAs -->
+  //       <div id="moduloTableContainer" class="overflow-x-auto">
+  //         ${this.renderEstudiantesModuloTable(
+  //           estudiantes,
+  //           resultadosAprendizaje
+  //         )}
+  //       </div>
+  //     </div>
+  //   `;
+
+  //   document
+  //     .getElementById("estudianteModuloSelect")
+  //     .addEventListener("change", (e) => {
+  //       const estudianteId = e.target.value;
+  //       const tableContainer = document.getElementById("moduloTableContainer");
+
+  //       if (estudianteId) {
+  //         const estudiante = estudiantes.find((est) => est.id == estudianteId);
+  //         tableContainer.innerHTML = this.renderDetalleEstudianteModulo(
+  //           estudiante,
+  //           resultadosAprendizaje
+  //         );
+  //       } else {
+  //         tableContainer.innerHTML = this.renderEstudiantesModuloTable(
+  //           estudiantes,
+  //           resultadosAprendizaje
+  //         );
+  //       }
+
+  //       lucide.createIcons();
+  //       this.setupModuloEditListeners();
+  //     });
+
+  //   lucide.createIcons();
+  // }
+  setupModuloInlineEditListeners() {
+    document.querySelectorAll(".edit-modulo-grade-inline").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const button = e.target.closest("button");
+        this.showEditModuloGradeModal(
+          button.dataset.inscripcion,
+          button.dataset.ra,
+          button.dataset.oportunidad,
+          button.dataset.calificacion,
+          button.dataset.estudiante,
+          button.dataset.raPorcentaje,
+          button.dataset.raNombre
+        );
+      });
+    });
+  }
+
+  setupConfigurarRAsButton(materiaId, resultadosActuales) {
+    const btn = document.getElementById("btnConfigurarRAs");
+    if (btn) {
+      btn.addEventListener("click", () => {
+        this.showConfigRAsModal(materiaId, resultadosActuales);
+      });
+    }
+  }
+
+  showConfigRAsModal(materiaId, resultadosActuales) {
+    // Por ahora, un mensaje simple
+    alert(
+      "Configuración de Resultados de Aprendizaje\n\n" +
+        `Total configurados: ${resultadosActuales.length} de 10\n\n` +
+        "Para agregar más RAs, usa la sección de Configuración en el menú principal."
+    );
+
+    // TODO: Crear modal completo para gestionar RAs
+    this.loadVista("configuracion");
+  }
+
   renderModuloGradesTable(estudiantes, materia, resultadosAprendizaje) {
     const container = document.getElementById("moduloGradesContainer");
 
+    // ✅ SIEMPRE mostrar 10 RAs, rellenar con vacíos si faltan
+    const rasCompletos = [];
+    for (let i = 0; i < 10; i++) {
+      if (resultadosAprendizaje[i]) {
+        rasCompletos.push(resultadosAprendizaje[i]);
+      } else {
+        // RA vacío
+        rasCompletos.push({
+          id: null,
+          nombre: `-`,
+          porcentaje: 0,
+          orden: i + 1,
+          vacio: true,
+        });
+      }
+    }
+
+    // Calcular suma de porcentajes (solo RAs configurados)
+    const sumaPortcentajes = rasCompletos
+      .filter((ra) => !ra.vacio)
+      .reduce((sum, ra) => sum + parseFloat(ra.porcentaje), 0);
+
     container.innerHTML = `
-      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div class="p-6 bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
-          <h4 class="text-xl font-bold">${materia.nombre}</h4>
-          <p class="text-purple-100">Total de estudiantes: ${
-            estudiantes.length
-          } | RAs: ${resultadosAprendizaje.length}</p>
-        </div>
-
-        <!-- Selector de estudiante -->
-        <div class="p-4 bg-slate-50 border-b border-slate-200">
-          <label class="block text-sm font-medium text-slate-700 mb-2">Seleccionar Estudiante para Ver Detalle</label>
-          <select id="estudianteModuloSelect" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500">
-            <option value="">Ver todos...</option>
-            ${estudiantes
-              .map(
-                (e) => `
-              <option value="${e.id}">${e.nombre}</option>
-            `
-              )
-              .join("")}
-          </select>
-        </div>
-
-        <!-- Tabla de RAs -->
-        <div id="moduloTableContainer" class="overflow-x-auto">
-          ${this.renderEstudiantesModuloTable(
-            estudiantes,
-            resultadosAprendizaje
-          )}
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+      <!-- Header del Módulo -->
+      <div class="p-6 bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
+        <div class="flex justify-between items-center">
+          <div>
+            <h4 class="text-xl font-bold">${materia.nombre}</h4>
+            <p class="text-purple-100">Total de estudiantes: ${
+              estudiantes.length
+            } | RAs: ${resultadosAprendizaje.length}</p>
+          </div>
+          <button 
+            id="btnConfigurarRAs"
+            class="px-4 py-2 bg-white text-purple-600 rounded-lg hover:bg-purple-50 transition-colors font-semibold"
+          >
+            <i data-lucide="settings" class="w-4 h-4 inline mr-2"></i>
+            Configurar RAs
+          </button>
         </div>
       </div>
-    `;
 
-    document
-      .getElementById("estudianteModuloSelect")
-      .addEventListener("change", (e) => {
-        const estudianteId = e.target.value;
-        const tableContainer = document.getElementById("moduloTableContainer");
+      <!-- Tabla Estilo Ordenanza -->
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse text-sm">
+          <!-- Header Principal -->
+          <thead>
+            <tr class="bg-gray-800 text-white">
+              <th rowspan="3" class="border border-gray-600 px-3 py-2 sticky left-0 bg-gray-800 z-10" style="min-width: 150px;">
+                Estudiante
+              </th>
+              <th colspan="40" class="border border-gray-600 px-3 py-2 text-center">
+                RESULTADO DE APRENDIZAJE (RA)
+              </th>
+              <th rowspan="3" class="border border-gray-600 px-3 py-2 text-center bg-gray-700" style="min-width: 80px;">
+                <div class="font-bold">Total</div>
+                <div class="text-xs font-normal">${sumaPortcentajes.toFixed(
+                  0
+                )}%</div>
+              </th>
+              <th rowspan="3" class="border border-gray-600 px-3 py-2 text-center bg-gray-700" style="min-width: 100px;">
+                <div class="font-bold">SITUACIÓN</div>
+                <div class="text-xs font-normal">ACADÉMICA</div>
+              </th>
+            </tr>
+            
+            <!-- Fila de Porcentajes -->
+            <tr class="bg-purple-600 text-white">
+              ${rasCompletos
+                .map(
+                  (ra, idx) => `
+                <th colspan="4" class="border border-purple-500 px-2 py-1 text-center ${
+                  ra.vacio ? "bg-gray-400" : ""
+                }">
+                  <button 
+                    class="edit-porcentaje-btn hover:underline ${
+                      ra.vacio ? "cursor-not-allowed" : "cursor-pointer"
+                    }"
+                    data-ra-index="${idx}"
+                    data-ra-id="${ra.id}"
+                    data-porcentaje="${ra.porcentaje}"
+                    data-nombre="${ra.nombre}"
+                    ${ra.vacio ? "disabled" : ""}
+                    title="${
+                      ra.vacio
+                        ? "RA no configurado"
+                        : "Click para editar porcentaje"
+                    }"
+                  >
+                    <div class="font-bold">%RA${idx + 1}</div>
+                    <div class="text-xs">${
+                      ra.vacio ? "-" : ra.porcentaje + "%"
+                    }</div>
+                  </button>
+                </th>
+              `
+                )
+                .join("")}
+            </tr>
+            
+            <!-- Fila de Oportunidades -->
+            <tr class="bg-purple-100 text-purple-900">
+              ${rasCompletos
+                .map(
+                  (ra) => `
+                <th class="border border-purple-300 px-1 py-1 text-xs" style="width: 60px;">1</th>
+                <th class="border border-purple-300 px-1 py-1 text-xs" style="width: 60px;">2</th>
+                <th class="border border-purple-300 px-1 py-1 text-xs" style="width: 60px;">3</th>
+                <th class="border border-purple-300 px-1 py-1 text-xs bg-yellow-100" style="width: 60px;">EE</th>
+              `
+                )
+                .join("")}
+            </tr>
+          </thead>
 
-        if (estudianteId) {
-          const estudiante = estudiantes.find((est) => est.id == estudianteId);
-          tableContainer.innerHTML = this.renderDetalleEstudianteModulo(
-            estudiante,
-            resultadosAprendizaje
-          );
-        } else {
-          tableContainer.innerHTML = this.renderEstudiantesModuloTable(
-            estudiantes,
-            resultadosAprendizaje
-          );
-        }
+          <!-- Cuerpo de la Tabla -->
+          <tbody>
+            ${estudiantes
+              .map((est) => {
+                const calificacionFinal =
+                  parseFloat(est.calificaciones.calificacion_final) || 0;
+                const aprobado = est.calificaciones.aprobado;
 
-        lucide.createIcons();
-        this.setupModuloEditListeners();
-      });
+                return `
+                <tr class="hover:bg-gray-50">
+                  <!-- Nombre del Estudiante -->
+                  <td class="border border-gray-300 px-3 py-2 font-medium sticky left-0 bg-white z-10">
+                    ${est.nombre}
+                  </td>
+                  
+                  <!-- Casillas de Calificaciones (4 por RA x 10 RAs = 40 casillas) -->
+                  ${rasCompletos
+                    .map((ra) => {
+                      if (ra.vacio) {
+                        // RA vacío - mostrar casillas deshabilitadas
+                        return `
+                        ${[0, 1, 2, 3]
+                          .map(
+                            () => `
+                          <td class="border border-gray-300 p-0 text-center bg-gray-100">
+                            <div class="w-full h-full px-2 py-3 text-gray-400 text-xs">-</div>
+                          </td>
+                        `
+                          )
+                          .join("")}
+                      `;
+                      }
+
+                      const raData = est.calificaciones.resultados?.find(
+                        (r) => r.id === ra.id
+                      ) || { oportunidades: {} };
+
+                      return `
+                      ${[0, 1, 2, 3]
+                        .map((oppIndex) => {
+                          const opp = raData.oportunidades?.[oppIndex];
+                          const calificacion =
+                            opp?.calificacion_sobre_100 || opp?.calificacion;
+                          const completado = opp?.completado;
+                          const esEvalEspecial = oppIndex === 3;
+
+                          return `
+                          <td class="border border-gray-300 p-0 text-center ${
+                            esEvalEspecial ? "bg-yellow-50" : ""
+                          }">
+                            <button 
+                              class="edit-modulo-grade-inline w-full h-full px-1 py-2 text-xs ${
+                                calificacion !== undefined &&
+                                calificacion !== null
+                                  ? completado
+                                    ? "bg-green-100 text-green-800 font-bold hover:bg-green-200"
+                                    : "bg-red-100 text-red-700 font-semibold hover:bg-red-200"
+                                  : "bg-white text-gray-400 hover:bg-gray-50"
+                              } transition-colors"
+                              data-inscripcion="${est.inscripcion_id}"
+                              data-ra="${ra.id}"
+                              data-ra-porcentaje="${ra.porcentaje}"
+                              data-ra-nombre="${ra.nombre}"
+                              data-oportunidad="${oppIndex + 1}"
+                              data-calificacion="${calificacion || ""}"
+                              data-estudiante="${est.nombre}"
+                              title="${est.nombre} - ${ra.nombre} - ${
+                            esEvalEspecial
+                              ? "Eval. Especial"
+                              : "Oport. " + (oppIndex + 1)
+                          }"
+                            >
+                              ${
+                                calificacion !== undefined &&
+                                calificacion !== null
+                                  ? `<div class="font-bold">${parseFloat(
+                                      calificacion
+                                    ).toFixed(0)}</div>
+                                   <div class="text-xs text-gray-500">(${(
+                                     (parseFloat(calificacion) / 100) *
+                                     ra.porcentaje
+                                   ).toFixed(1)})</div>`
+                                  : '<div class="text-base">-</div>'
+                              }
+                            </button>
+                          </td>
+                        `;
+                        })
+                        .join("")}
+                    `;
+                    })
+                    .join("")}
+                  
+                  <!-- Total -->
+                  <td class="border border-gray-400 px-2 py-2 text-center bg-gray-50">
+                    <div class="text-xl font-bold ${
+                      aprobado ? "text-green-600" : "text-red-600"
+                    }">
+                      ${calificacionFinal.toFixed(1)}
+                    </div>
+                  </td>
+                  
+                  <!-- Estado -->
+                  <td class="border border-gray-400 px-2 py-2 text-center bg-gray-50">
+                    <span class="px-2 py-1 rounded text-xs font-semibold ${
+                      aprobado
+                        ? "bg-green-100 text-green-700"
+                        : est.calificaciones.todos_completados
+                        ? "bg-red-100 text-red-700"
+                        : "bg-yellow-100 text-yellow-700"
+                    }">
+                      ${
+                        aprobado
+                          ? "✓ APROBADO"
+                          : est.calificaciones.todos_completados
+                          ? "✗ REPROBADO"
+                          : "⏳ PENDIENTE"
+                      }
+                    </span>
+                  </td>
+                </tr>
+              `;
+              })
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Leyenda -->
+      <div class="p-4 bg-gray-50 border-t border-gray-200">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div class="bg-blue-50 border border-blue-200 rounded p-3">
+            <h6 class="font-bold text-blue-900 mb-1">📊 Cómo se Califica</h6>
+            <ul class="text-blue-800 space-y-1">
+              <li>• <strong>Número grande:</strong> Calificación sobre 100</li>
+              <li>• <strong>(Número pequeño):</strong> Convertido al % del RA</li>
+              <li>• <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded">Verde</span> = Completado (≥70%)</li>
+              <li>• <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded">Rojo</span> = No alcanzó mínimo</li>
+            </ul>
+          </div>
+          
+          <div class="bg-purple-50 border border-purple-200 rounded p-3">
+            <h6 class="font-bold text-purple-900 mb-1">📋 Oportunidades</h6>
+            <ul class="text-purple-800 space-y-1">
+              <li>• <strong>1, 2, 3:</strong> Oportunidades regulares</li>
+              <li>• <strong>EE:</strong> Evaluación Especial</li>
+              <li>• Click en cualquier casilla para calificar</li>
+              <li>• Se marca como completado automáticamente</li>
+            </ul>
+          </div>
+          
+          <div class="bg-amber-50 border border-amber-200 rounded p-3">
+            <h6 class="font-bold text-amber-900 mb-1">⚙️ Configuración</h6>
+            <ul class="text-amber-800 space-y-1">
+              <li>• Click en <strong>%RA#</strong> para editar porcentaje</li>
+              <li>• Click en <strong>"Configurar RAs"</strong> para gestionar</li>
+              <li>• Suma total debe ser <strong>100%</strong></li>
+              <li>• <strong>Estado actual:</strong> ${
+                sumaPortcentajes === 100
+                  ? "✅ Válido"
+                  : "⚠️ " + sumaPortcentajes.toFixed(0) + "%"
+              }</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+    // Event Listeners
+    this.setupModuloInlineEditListeners();
+    this.setupPorcentajeEditListeners(materia.id);
+    this.setupConfigurarRAsButton(materia.id, resultadosAprendizaje);
 
     lucide.createIcons();
+  }
+
+  setupPorcentajeEditListeners(materiaId) {
+    document.querySelectorAll(".edit-porcentaje-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        const button = e.target.closest("button");
+        if (button.disabled) return;
+
+        const raId = button.dataset.raId;
+        const raIndex = button.dataset.raIndex;
+        const porcentajeActual = button.dataset.porcentaje;
+        const nombre = button.dataset.nombre;
+
+        const nuevoPorcentaje = prompt(
+          `Editar Porcentaje del RA ${parseInt(raIndex) + 1}\n` +
+            `${nombre}\n\n` +
+            `Porcentaje actual: ${porcentajeActual}%\n` +
+            `Ingrese el nuevo porcentaje (0-100):`,
+          porcentajeActual
+        );
+
+        if (nuevoPorcentaje === null) return;
+
+        const pct = parseFloat(nuevoPorcentaje);
+
+        if (isNaN(pct) || pct < 0 || pct > 100) {
+          uiService.showNotification(
+            "❌ El porcentaje debe ser un número entre 0 y 100",
+            NOTIFICATION_TYPES.ERROR
+          );
+          return;
+        }
+
+        try {
+          // Llamar al backend para actualizar el porcentaje
+          const response = await fetch(
+            `/api/admin/materias/${materiaId}/resultados/${raId}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify({ porcentaje: pct }),
+            }
+          );
+
+          const data = await response.json();
+
+          if (data.success) {
+            uiService.showNotification(
+              "✅ Porcentaje actualizado exitosamente",
+              NOTIFICATION_TYPES.SUCCESS
+            );
+
+            // Recargar la tabla
+            this.loadModuloGradesData();
+          } else {
+            uiService.showNotification(
+              "❌ " + data.message,
+              NOTIFICATION_TYPES.ERROR
+            );
+          }
+        } catch (error) {
+          console.error("Error actualizando porcentaje:", error);
+          uiService.showNotification(
+            "❌ Error al actualizar porcentaje",
+            NOTIFICATION_TYPES.ERROR
+          );
+        }
+      });
+    });
   }
 
   renderEstudiantesModuloTable(estudiantes, resultadosAprendizaje) {
@@ -1096,142 +1503,399 @@ class GradesModule {
     `;
   }
 
+  // renderDetalleEstudianteModulo(estudiante, resultadosAprendizaje) {
+  //   return `
+  //     <div class="p-6">
+  //       <h5 class="text-lg font-bold text-slate-800 mb-4">${
+  //         estudiante.nombre
+  //       }</h5>
+
+  //       <table class="w-full">
+  //         <thead class="bg-slate-50">
+  //           <tr>
+  //             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700">RA</th>
+  //             <th class="px-4 py-3 text-center text-sm font-semibold text-slate-700">%</th>
+  //             <th class="px-4 py-3 text-center text-sm font-semibold text-slate-700">Mín.</th>
+  //             <th class="px-4 py-3 text-center text-sm font-semibold text-slate-700">Oport. 1</th>
+  //             <th class="px-4 py-3 text-center text-sm font-semibold text-slate-700">Oport. 2</th>
+  //             <th class="px-4 py-3 text-center text-sm font-semibold text-slate-700">Oport. 3</th>
+  //             <th class="px-4 py-3 text-center text-sm font-semibold text-slate-700">Eval. Esp.</th>
+  //             <th class="px-4 py-3 text-center text-sm font-semibold text-slate-700">Final</th>
+  //             <th class="px-4 py-3 text-center text-sm font-semibold text-slate-700">Estado</th>
+  //           </tr>
+  //         </thead>
+  //         <tbody class="divide-y divide-slate-200">
+  //           ${resultadosAprendizaje
+  //             .map((ra, index) => {
+  //               const raData = estudiante.calificaciones.resultados?.find(
+  //                 (r) => r.id === ra.id
+  //               ) || { oportunidades: {} };
+
+  //               return `
+  //               <tr class="hover:bg-slate-50">
+  //                 <td class="px-4 py-3">
+  //                   <div>
+  //                     <p class="font-medium text-slate-800">RA ${index + 1}</p>
+  //                     <p class="text-xs text-slate-500">${ra.nombre}</p>
+  //                   </div>
+  //                 </td>
+  //                 <td class="px-4 py-3 text-center">
+  //                   <span class="font-semibold text-purple-600">${
+  //                     ra.porcentaje
+  //                   }%</span>
+  //                 </td>
+  //                 <td class="px-4 py-3 text-center">
+  //                   <span class="text-sm text-slate-600">${
+  //                     ra.minimo_aprobatorio
+  //                   }</span>
+  //                 </td>
+  //                 ${[0, 1, 2, 3]
+  //                   .map((opp) => {
+  //                     const calif = raData.oportunidades?.[opp];
+  //                     return `
+  //                     <td class="px-4 py-3 text-center">
+  //                       <button
+  //                         class="edit-modulo-grade px-3 py-1 rounded ${
+  //                           calif
+  //                             ? calif.completado
+  //                               ? "bg-green-100 text-green-700"
+  //                               : "bg-red-100 text-red-700"
+  //                             : "bg-slate-100 text-slate-600"
+  //                         } hover:opacity-80 transition-opacity text-sm font-semibold"
+  //                         data-inscripcion="${estudiante.inscripcion_id}"
+  //                         data-ra="${ra.id}"
+  //                         data-oportunidad="${opp + 1}"
+  //                         data-calificacion="${calif?.calificacion || ""}"
+  //                         data-estudiante="${estudiante.nombre}"
+  //                       >
+  //                         ${
+  //                           calif
+  //                             ? calif.calificacion.toFixed(2)
+  //                             : opp === 3
+  //                             ? "EE"
+  //                             : "NC"
+  //                         }
+  //                       </button>
+  //                     </td>
+  //                   `;
+  //                   })
+  //                   .join("")}
+  //                 <td class="px-4 py-3 text-center">
+  //                   <span class="text-lg font-bold ${
+  //                     raData.completado ? "text-green-600" : "text-slate-400"
+  //                   }">
+  //                     ${
+  //                       raData.completado
+  //                         ? raData.calificacion_final.toFixed(2)
+  //                         : "-"
+  //                     }
+  //                   </span>
+  //                 </td>
+  //                 <td class="px-4 py-3 text-center">
+  //                   <span class="px-3 py-1 rounded-full text-xs font-semibold ${
+  //                     raData.completado
+  //                       ? "bg-green-100 text-green-700"
+  //                       : "bg-slate-100 text-slate-600"
+  //                   }">
+  //                     ${raData.completado ? "✓ Completado" : "Pendiente"}
+  //                   </span>
+  //                 </td>
+  //               </tr>
+  //             `;
+  //             })
+  //             .join("")}
+  //         </tbody>
+  //         <tfoot class="bg-slate-100">
+  //           <tr>
+  //             <td colspan="7" class="px-4 py-4 font-bold text-slate-800">Calificación Final del Módulo</td>
+  //             <td class="px-4 py-4 text-center">
+  //               <span class="text-3xl font-bold ${
+  //                 estudiante.calificaciones.aprobado
+  //                   ? "text-green-600"
+  //                   : "text-red-600"
+  //               }">
+  //                 ${estudiante.calificaciones.calificacion_final}
+  //               </span>
+  //             </td>
+  //             <td class="px-4 py-4 text-center">
+  //               <span class="px-4 py-2 rounded-full text-sm font-semibold ${
+  //                 estudiante.calificaciones.aprobado
+  //                   ? "bg-green-100 text-green-700"
+  //                   : "bg-red-100 text-red-700"
+  //               }">
+  //                 ${
+  //                   estudiante.calificaciones.aprobado
+  //                     ? "✓ APROBADO"
+  //                     : estudiante.calificaciones.todos_completados
+  //                     ? "✗ REPROBADO"
+  //                     : "PENDIENTE"
+  //                 }
+  //               </span>
+  //             </td>
+  //           </tr>
+  //         </tfoot>
+  //       </table>
+  //     </div>
+  //   `;
+  // }
   renderDetalleEstudianteModulo(estudiante, resultadosAprendizaje) {
     return `
-      <div class="p-6">
-        <h5 class="text-lg font-bold text-slate-800 mb-4">${
+    <div class="p-6">
+      <div class="mb-6 bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <h5 class="text-lg font-bold text-purple-900 mb-2">${
           estudiante.nombre
         }</h5>
-        
-        <table class="w-full">
-          <thead class="bg-slate-50">
-            <tr>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700">RA</th>
-              <th class="px-4 py-3 text-center text-sm font-semibold text-slate-700">%</th>
-              <th class="px-4 py-3 text-center text-sm font-semibold text-slate-700">Mín.</th>
-              <th class="px-4 py-3 text-center text-sm font-semibold text-slate-700">Oport. 1</th>
-              <th class="px-4 py-3 text-center text-sm font-semibold text-slate-700">Oport. 2</th>
-              <th class="px-4 py-3 text-center text-sm font-semibold text-slate-700">Oport. 3</th>
-              <th class="px-4 py-3 text-center text-sm font-semibold text-slate-700">Eval. Esp.</th>
-              <th class="px-4 py-3 text-center text-sm font-semibold text-slate-700">Final</th>
-              <th class="px-4 py-3 text-center text-sm font-semibold text-slate-700">Estado</th>
+        <p class="text-sm text-purple-700">
+          <strong>💡 Instrucciones:</strong> Los maestros califican sobre 100 puntos. 
+          El sistema convierte automáticamente al porcentaje del RA.
+        </p>
+        <p class="text-xs text-purple-600 mt-1">
+          <strong>Ejemplo:</strong> Si el RA vale 25% y el maestro da 80 puntos → se registra 20 (80% de 25)
+        </p>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="bg-purple-600 text-white">
+              ${resultadosAprendizaje
+                .map(
+                  (ra, index) => `
+                <th class="border border-purple-500 px-3 py-2 text-center" colspan="4">
+                  <div class="font-bold">RA ${index + 1} (${
+                    ra.porcentaje
+                  }%)</div>
+                  <div class="text-xs font-normal mt-1">${ra.nombre}</div>
+                </th>
+              `
+                )
+                .join("")}
+              <th class="border border-purple-700 px-3 py-2 bg-purple-800" rowspan="2">
+                <div class="font-bold">Total</div>
+                <div class="text-xs font-normal">100%</div>
+              </th>
+              <th class="border border-purple-700 px-3 py-2 bg-purple-800" rowspan="2">
+                <div class="font-bold">Situación</div>
+                <div class="text-xs font-normal">Académica</div>
+              </th>
+            </tr>
+            <tr class="bg-purple-100 text-purple-900">
+              ${resultadosAprendizaje
+                .map(
+                  () => `
+                <th class="border border-purple-300 px-2 py-1 text-xs w-16">Oport. 1</th>
+                <th class="border border-purple-300 px-2 py-1 text-xs w-16">Oport. 2</th>
+                <th class="border border-purple-300 px-2 py-1 text-xs w-16">Oport. 3</th>
+                <th class="border border-purple-300 px-2 py-1 text-xs w-16 bg-yellow-100">Eval. Esp.</th>
+              `
+                )
+                .join("")}
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-200">
-            ${resultadosAprendizaje
-              .map((ra, index) => {
-                const raData = estudiante.calificaciones.resultados?.find(
-                  (r) => r.id === ra.id
-                ) || { oportunidades: {} };
+          <tbody>
+            <tr>
+              ${resultadosAprendizaje
+                .map((ra) => {
+                  const raData = estudiante.calificaciones.resultados?.find(
+                    (r) => r.id === ra.id
+                  ) || {
+                    oportunidades: {},
+                  };
 
-                return `
-                <tr class="hover:bg-slate-50">
-                  <td class="px-4 py-3">
-                    <div>
-                      <p class="font-medium text-slate-800">RA ${index + 1}</p>
-                      <p class="text-xs text-slate-500">${ra.nombre}</p>
-                    </div>
-                  </td>
-                  <td class="px-4 py-3 text-center">
-                    <span class="font-semibold text-purple-600">${
-                      ra.porcentaje
-                    }%</span>
-                  </td>
-                  <td class="px-4 py-3 text-center">
-                    <span class="text-sm text-slate-600">${
-                      ra.minimo_aprobatorio
-                    }</span>
-                  </td>
+                  return `
                   ${[0, 1, 2, 3]
-                    .map((opp) => {
-                      const calif = raData.oportunidades?.[opp];
+                    .map((oppIndex) => {
+                      const opp = raData.oportunidades?.[oppIndex];
+                      const calificacion =
+                        opp?.calificacion_sobre_100 || opp?.calificacion; // Usar la calificación sobre 100 si existe
+                      const completado = opp?.completado;
+                      const esEvalEspecial = oppIndex === 3;
+
                       return `
-                      <td class="px-4 py-3 text-center">
+                      <td class="border border-slate-300 p-0 text-center ${
+                        esEvalEspecial ? "bg-yellow-50" : ""
+                      }">
                         <button 
-                          class="edit-modulo-grade px-3 py-1 rounded ${
-                            calif
-                              ? calif.completado
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700"
-                              : "bg-slate-100 text-slate-600"
-                          } hover:opacity-80 transition-opacity text-sm font-semibold"
+                          class="edit-modulo-grade w-full h-full px-2 py-3 ${
+                            calificacion !== undefined && calificacion !== null
+                              ? completado
+                                ? "bg-green-100 text-green-700 font-bold hover:bg-green-200"
+                                : "bg-red-100 text-red-700 font-semibold hover:bg-red-200"
+                              : "bg-white text-slate-400 hover:bg-slate-100"
+                          } transition-colors"
                           data-inscripcion="${estudiante.inscripcion_id}"
                           data-ra="${ra.id}"
-                          data-oportunidad="${opp + 1}"
-                          data-calificacion="${calif?.calificacion || ""}"
+                          data-ra-porcentaje="${ra.porcentaje}"
+                          data-ra-nombre="${ra.nombre}"
+                          data-oportunidad="${oppIndex + 1}"
+                          data-calificacion="${calificacion || ""}"
                           data-estudiante="${estudiante.nombre}"
+                          title="${
+                            esEvalEspecial
+                              ? "Evaluación Especial"
+                              : "Oportunidad " + (oppIndex + 1)
+                          }"
                         >
                           ${
-                            calif
-                              ? calif.calificacion.toFixed(2)
-                              : opp === 3
-                              ? "EE"
-                              : "NC"
+                            calificacion !== undefined && calificacion !== null
+                              ? `<div class="text-base">${parseFloat(
+                                  calificacion
+                                ).toFixed(0)}</div>
+                               <div class="text-xs text-slate-500">(${(
+                                 (parseFloat(calificacion) / 100) *
+                                 ra.porcentaje
+                               ).toFixed(1)})</div>`
+                              : '<div class="text-lg">NC</div>'
                           }
                         </button>
                       </td>
                     `;
                     })
                     .join("")}
-                  <td class="px-4 py-3 text-center">
-                    <span class="text-lg font-bold ${
-                      raData.completado ? "text-green-600" : "text-slate-400"
-                    }">
-                      ${
-                        raData.completado
-                          ? raData.calificacion_final.toFixed(2)
-                          : "-"
-                      }
-                    </span>
-                  </td>
-                  <td class="px-4 py-3 text-center">
-                    <span class="px-3 py-1 rounded-full text-xs font-semibold ${
-                      raData.completado
-                        ? "bg-green-100 text-green-700"
-                        : "bg-slate-100 text-slate-600"
-                    }">
-                      ${raData.completado ? "✓ Completado" : "Pendiente"}
-                    </span>
-                  </td>
-                </tr>
-              `;
-              })
-              .join("")}
-          </tbody>
-          <tfoot class="bg-slate-100">
-            <tr>
-              <td colspan="7" class="px-4 py-4 font-bold text-slate-800">Calificación Final del Módulo</td>
-              <td class="px-4 py-4 text-center">
-                <span class="text-3xl font-bold ${
+                `;
+                })
+                .join("")}
+              <td class="border border-slate-400 px-3 py-3 text-center bg-slate-50">
+                <div class="text-2xl font-bold ${
                   estudiante.calificaciones.aprobado
                     ? "text-green-600"
                     : "text-red-600"
                 }">
-                  ${estudiante.calificaciones.calificacion_final}
-                </span>
+                  ${parseFloat(
+                    estudiante.calificaciones.calificacion_final
+                  ).toFixed(1)}
+                </div>
               </td>
-              <td class="px-4 py-4 text-center">
-                <span class="px-4 py-2 rounded-full text-sm font-semibold ${
+              <td class="border border-slate-400 px-3 py-3 text-center bg-slate-50">
+                <span class="px-3 py-1 rounded-full text-xs font-semibold ${
                   estudiante.calificaciones.aprobado
                     ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
+                    : estudiante.calificaciones.todos_completados
+                    ? "bg-red-100 text-red-700"
+                    : "bg-yellow-100 text-yellow-700"
                 }">
                   ${
                     estudiante.calificaciones.aprobado
                       ? "✓ APROBADO"
                       : estudiante.calificaciones.todos_completados
                       ? "✗ REPROBADO"
-                      : "PENDIENTE"
+                      : "⏳ PENDIENTE"
                   }
                 </span>
               </td>
             </tr>
-          </tfoot>
+          </tbody>
         </table>
       </div>
-    `;
+
+      <!-- Leyenda -->
+      <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h6 class="font-bold text-blue-900 mb-2">📊 Cómo se Califica</h6>
+          <ul class="text-sm text-blue-800 space-y-1">
+            <li>• Los números grandes son sobre <strong>100 puntos</strong></li>
+            <li>• Los números pequeños (entre paréntesis) son la <strong>conversión al porcentaje del RA</strong></li>
+            <li>• <span class="px-2 py-1 bg-green-100 text-green-700 rounded">Verde</span> = RA completado (alcanzó el mínimo)</li>
+            <li>• <span class="px-2 py-1 bg-red-100 text-red-700 rounded">Rojo</span> = RA no completado</li>
+            <li>• NC = No Calificado</li>
+          </ul>
+        </div>
+
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <h6 class="font-bold text-purple-900 mb-2">📋 Resumen del Módulo</h6>
+          <div class="space-y-2 text-sm">
+            ${resultadosAprendizaje
+              .map((ra, idx) => {
+                const raData = estudiante.calificaciones.resultados?.find(
+                  (r) => r.id === ra.id
+                );
+                return `
+                <div class="flex justify-between items-center">
+                  <span class="text-purple-700">RA ${idx + 1} (${
+                  ra.porcentaje
+                }%):</span>
+                  <span class="font-semibold ${
+                    raData?.completado ? "text-green-600" : "text-slate-400"
+                  }">
+                    ${
+                      raData?.completado
+                        ? raData.calificacion_final.toFixed(1) + " pts"
+                        : "Pendiente"
+                    }
+                  </span>
+                </div>
+              `;
+              })
+              .join("")}
+            <div class="pt-2 border-t border-purple-300 flex justify-between items-center">
+              <span class="text-purple-900 font-bold">Total:</span>
+              <span class="text-xl font-bold ${
+                estudiante.calificaciones.aprobado
+                  ? "text-green-600"
+                  : "text-red-600"
+              }">
+                ${estudiante.calificaciones.calificacion_final} / 100
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
   }
 
+  // setupModuloEditListeners() {
+  //   document.querySelectorAll(".edit-modulo-grade").forEach((btn) => {
+  //     btn.addEventListener("click", (e) => {
+  //       const button = e.target.closest("button");
+  //       this.showEditModuloGradeModal(
+  //         button.dataset.inscripcion,
+  //         button.dataset.ra,
+  //         button.dataset.oportunidad,
+  //         button.dataset.calificacion,
+  //         button.dataset.estudiante
+  //       );
+  //     });
+  //   });
+  // }
+
+  // showEditModuloGradeModal(
+  //   inscripcionId,
+  //   raId,
+  //   oportunidad,
+  //   calificacionActual,
+  //   estudianteNombre
+  // ) {
+  //   const oppName =
+  //     oportunidad == 4 ? "Evaluación Especial" : `Oportunidad ${oportunidad}`;
+
+  //   const calificacion = prompt(
+  //     `${estudianteNombre}\n${oppName}\n\nIngrese la calificación:`,
+  //     calificacionActual || ""
+  //   );
+
+  //   if (calificacion === null) return;
+
+  //   if (calificacion === "") {
+  //     uiService.showNotification(
+  //       "ℹ️ No se registró calificación (NC)",
+  //       NOTIFICATION_TYPES.INFO
+  //     );
+  //     return;
+  //   }
+
+  //   const calif = parseFloat(calificacion);
+
+  //   if (isNaN(calif) || calif < 0) {
+  //     uiService.showNotification(
+  //       "❌ La calificación debe ser un número mayor o igual a 0",
+  //       NOTIFICATION_TYPES.ERROR
+  //     );
+  //     return;
+  //   }
+
+  //   this.saveModuloGrade(inscripcionId, raId, oportunidad, calif);
+  // }
   setupModuloEditListeners() {
     document.querySelectorAll(".edit-modulo-grade").forEach((btn) => {
       btn.addEventListener("click", (e) => {
@@ -1241,7 +1905,9 @@ class GradesModule {
           button.dataset.ra,
           button.dataset.oportunidad,
           button.dataset.calificacion,
-          button.dataset.estudiante
+          button.dataset.estudiante,
+          button.dataset.raPorcentaje, // ← Nuevo
+          button.dataset.raNombre // ← Nuevo
         );
       });
     });
@@ -1252,15 +1918,34 @@ class GradesModule {
     raId,
     oportunidad,
     calificacionActual,
-    estudianteNombre
+    estudianteNombre,
+    raPorcentaje,
+    raNombre
   ) {
     const oppName =
       oportunidad == 4 ? "Evaluación Especial" : `Oportunidad ${oportunidad}`;
 
-    const calificacion = prompt(
-      `${estudianteNombre}\n${oppName}\n\nIngrese la calificación:`,
-      calificacionActual || ""
-    );
+    const mensaje = `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📚 CALIFICACIÓN DE MÓDULO FORMATIVO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+👨‍🎓 Estudiante: ${estudianteNombre}
+📊 ${raNombre}
+📈 Porcentaje del RA: ${raPorcentaje}%
+🎯 ${oppName}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ CALIFICA SOBRE 100 PUNTOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 Ejemplo: Si calificas con 80 puntos y el RA vale 25%
+   → El sistema registrará: 20 puntos (80% de 25)
+
+Ingrese la calificación (0-100):
+  `.trim();
+
+    const calificacion = prompt(mensaje, calificacionActual || "");
 
     if (calificacion === null) return;
 
@@ -1274,13 +1959,27 @@ class GradesModule {
 
     const calif = parseFloat(calificacion);
 
-    if (isNaN(calif) || calif < 0) {
+    if (isNaN(calif) || calif < 0 || calif > 100) {
       uiService.showNotification(
-        "❌ La calificación debe ser un número mayor o igual a 0",
+        "❌ La calificación debe ser un número entre 0 y 100",
         NOTIFICATION_TYPES.ERROR
       );
       return;
     }
+
+    // Calcular la conversión para mostrarla al usuario
+    const calificacionConvertida = (calif / 100) * parseFloat(raPorcentaje);
+
+    const confirmar = confirm(
+      `¿Confirmar calificación?\n\n` +
+        `Calificación ingresada: ${calif} / 100\n` +
+        `Equivale a: ${calificacionConvertida.toFixed(
+          2
+        )} puntos del ${raPorcentaje}% del RA\n\n` +
+        `¿Desea registrar esta calificación?`
+    );
+
+    if (!confirmar) return;
 
     this.saveModuloGrade(inscripcionId, raId, oportunidad, calif);
   }

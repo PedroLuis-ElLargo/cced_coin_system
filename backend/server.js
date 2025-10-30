@@ -18,7 +18,6 @@ const uploadsDirs = [
 uploadsDirs.forEach((dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
-    console.log(`✅ Carpeta ${dir} creada`);
   }
 });
 
@@ -43,7 +42,6 @@ app.use("/uploads", express.static("uploads"));
 // Logging de peticiones en desarrollo
 if (process.env.NODE_ENV === "development") {
   app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path}`);
     next();
   });
 }
@@ -142,13 +140,19 @@ app.listen(PORT, () => {
   console.log("╚════════════════════════════════════════╝");
 });
 
-// Manejo de cierre graceful
+// ==============================
+// MANEJO DE CIERRE GRACEFUL
+// ==============================
 process.on("SIGTERM", () => {
-  console.log("🔴 SIGTERM recibido, cerrando servidor...");
+  if (process.env.NODE_ENV === "development") {
+    console.log("🔴 SIGTERM recibido, cerrando servidor...");
+  }
   process.exit(0);
 });
 
 process.on("SIGINT", () => {
-  console.log("🔴 SIGINT recibido, cerrando servidor...");
+  if (process.env.NODE_ENV === "development") {
+    console.log("🔴 SIGINT recibido, cerrando servidor...");
+  }
   process.exit(0);
 });

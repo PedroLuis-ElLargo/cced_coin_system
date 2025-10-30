@@ -15,8 +15,6 @@ class CalificacionModule {
   }
 
   async render() {
-    console.log("🔧 Renderizando módulo de calificaciones...");
-
     const mainContent = document.getElementById("mainContent");
     if (!mainContent) {
       console.error("❌ No se encontró main-content");
@@ -149,9 +147,12 @@ class CalificacionModule {
       await this.cargarModulos();
 
       this.initialized = true;
-      console.log("✅ Módulo de calificaciones renderizado correctamente");
     } catch (error) {
       console.error("❌ Error renderizando módulo de calificaciones:", error);
+      uiService.showNotification(
+        "Error al cargar el módulo de calificaciones",
+        NOTIFICATION_TYPES.ERROR
+      );
     }
   }
   // Agregar método para inicializar icons
@@ -159,16 +160,17 @@ class CalificacionModule {
     if (window.lucide) {
       try {
         lucide.createIcons();
-        console.log("✅ Iconos de Lucide inicializados");
       } catch (iconError) {
         console.warn("⚠️ Error inicializando iconos:", iconError);
+        uiService.showNotification(
+          "Error al inicializar iconos",
+          NOTIFICATION_TYPES.WARNING
+        );
       }
     }
   }
 
   attachEventListeners() {
-    console.log("🔧 Adjuntando event listeners...");
-
     // Usar delegación de eventos para elementos dinámicos
     document.addEventListener("click", (e) => {
       // Tabs
@@ -208,8 +210,6 @@ class CalificacionModule {
         this.crearModulo(e.target);
       });
     }
-
-    console.log("✅ Event listeners adjuntados");
   }
 
   async cambiarTab(tab) {
@@ -1061,7 +1061,7 @@ class CalificacionModule {
               return;
             }
 
-              try {
+            try {
               // Usar helper apiService.inscribirEstudiantes
               const result = await apiService.inscribirEstudiantes({
                 moduloId,

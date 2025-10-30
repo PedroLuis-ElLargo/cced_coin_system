@@ -15,14 +15,6 @@ const {
 const multer = require("multer");
 const path = require("path");
 
-// ✅ AGREGAR ESTAS LÍNEAS DE DEBUG
-console.log("🔍 gradesController cargado:", !!gradesController);
-console.log("🔍 Métodos disponibles:", Object.keys(gradesController));
-console.log(
-  "🔍 getPeriodoActivo existe:",
-  typeof gradesController.getPeriodoActivo
-);
-
 // Configuración de Multer para archivos
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -70,7 +62,6 @@ router.use(verifyAdmin);
 
 // ✅ AGREGAR ESTE LOG DESPUÉS DE LOS MIDDLEWARES
 router.use((req, res, next) => {
-  console.log(`📍 Ruta alcanzada: ${req.method} /api/admin${req.path}`);
   next();
 });
 
@@ -99,7 +90,11 @@ router.post(
   verifyAdmin,
   gradesController.createResultadosAprendizaje
 );
-
+// Actualizar porcentaje de un RA
+router.put(
+  "/materias/:materiaId/resultados/:raId",
+  gradesController.updateResultadoAprendizaje
+);
 // ==========================================
 // INSCRIPCIONES
 // ==========================================

@@ -22,9 +22,6 @@ class TasksModule {
     const selectedFilesId =
       modalType === "new" ? "newSelectedFiles" : "selectedFiles";
 
-    console.log(`🔧 Inicializando upload para modal: ${modalType}`);
-    console.log(`🔧 Buscando input: #${fileInputId}`);
-
     const fileInput = document.getElementById(fileInputId);
     const dropZone = fileInput?.closest("div.border-dashed");
     const selectedFilesDiv = document.getElementById(selectedFilesId);
@@ -46,15 +43,12 @@ class TasksModule {
       return;
     }
 
-    console.log("✅ Elementos encontrados, configurando listeners...");
-
     // 🔧 MEJORADO: Remover todos los listeners previos
     const newFileInput = fileInput.cloneNode(true);
     fileInput.parentNode.replaceChild(newFileInput, fileInput);
 
     // 🔧 MEJORADO: Agregar listener al input
     newFileInput.addEventListener("change", (e) => {
-      console.log("📁 Archivos seleccionados:", e.target.files.length);
       e.preventDefault();
       e.stopPropagation();
       this.handleFileSelection(e.target.files, modalType);
@@ -74,23 +68,10 @@ class TasksModule {
 
       // Agregar nuevo listener
       newerInput.addEventListener("change", (e) => {
-        console.log(
-          "📁 Archivos seleccionados (final input):",
-          e.target.files.length
-        );
         e.preventDefault();
         e.stopPropagation();
         this.handleFileSelection(e.target.files, modalType);
       });
-
-      // 🔧 NUEVO: Agregar evento de click al label
-      const label = newDropZone.querySelector(`label[for="${fileInputId}"]`);
-      if (label) {
-        label.addEventListener("click", (e) => {
-          console.log("🖱️ Click en label detectado");
-          // El click se propagará naturalmente al input
-        });
-      }
     }
 
     // Drag and drop events
@@ -107,14 +88,11 @@ class TasksModule {
     });
 
     newDropZone.addEventListener("drop", (e) => {
-      console.log("📦 Archivos soltados en drop zone");
       e.preventDefault();
       e.stopPropagation();
       newDropZone.classList.remove("border-emerald-500", "bg-emerald-50");
       this.handleFileSelection(e.dataTransfer.files, modalType);
     });
-
-    console.log("✅ Upload inicializado correctamente");
   }
 
   handleFileSelection(files, modalType = "edit") {
@@ -1215,16 +1193,7 @@ class TasksModule {
 
       // 🔧 NUEVO: Forzar recreación de los iconos
       lucide.createIcons();
-
-      // 🔧 NUEVO: Log de debug para verificar
-      console.log("🔧 Edit modal: Input de archivos inicializado");
-      const fileInput = document.getElementById("taskFiles");
-      if (fileInput) {
-        console.log("✅ Input de archivos encontrado:", fileInput);
-      } else {
-        console.error("❌ Input de archivos NO encontrado");
-      }
-    }, 200); // 🔧 Aumentado de 100ms a 200ms
+    }, 200);
   }
 
   initEditForm() {

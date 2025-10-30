@@ -230,9 +230,6 @@ exports.generateRegistrationCode = async (req, res) => {
   try {
     const { fecha_expiracion } = req.body;
 
-    console.log("📝 Request body:", req.body); // Debug
-    console.log("👤 Usuario:", req.user); // Debug
-
     // VALIDAR que fecha_expiracion es obligatoria
     if (!fecha_expiracion) {
       return res.status(400).json({
@@ -259,15 +256,11 @@ exports.generateRegistrationCode = async (req, res) => {
       .toString("hex")
       .toUpperCase()}`;
 
-    console.log("🔑 Código generado:", code); // Debug
-
     // Insertar en base de datos
     await query(
       "INSERT INTO registration_codes (code, creado_por, fecha_expiracion) VALUES (?, ?, ?)",
       [code, req.user.id, expiracion]
     );
-
-    console.log("✅ Código insertado en BD"); // Debug
 
     res.status(201).json({
       success: true,

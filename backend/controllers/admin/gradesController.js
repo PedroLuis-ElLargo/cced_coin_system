@@ -196,28 +196,37 @@ exports.getResultadosAprendizaje = async (req, res) => {
     const { materiaId } = req.params;
 
     const resultados = await query(
-      `SELECT * FROM resultados_aprendizaje
-       WHERE materia_id = ?
-       ORDER BY orden`,
+      `SELECT 
+        id, 
+        materia_id,
+        nombre, 
+        descripcion,
+        porcentaje,
+        orden
+      FROM resultados_aprendizaje 
+      WHERE materia_id = ? 
+      ORDER BY orden, id`,
       [materiaId]
     );
 
-    // Calcular suma de porcentajes
-    const sumaPortentajes = resultados.reduce(
-      (sum, ra) => sum + parseFloat(ra.porcentaje),
+    // Verificar que la suma de porcentajes sea 100
+    const sumaPortcentajes = resultados.reduce(
+      (sum, r) => sum + parseFloat(r.porcentaje),
       0
     );
 
     res.json({
       success: true,
-      resultados,
-      suma_porcentajes: sumaPortentajes,
+      resultados: resultados,
+      suma_porcentajes: sumaPortcentajes.toFixed(2),
+      valido: Math.abs(sumaPortcentajes - 100) < 0.01,
     });
   } catch (error) {
     console.error("Error obteniendo resultados de aprendizaje:", error);
     res.status(500).json({
       success: false,
       message: "Error al obtener resultados de aprendizaje",
+      error: error.message,
     });
   }
 };
@@ -480,6 +489,15 @@ exports.registrarCalificacionModulo = async (req, res) => {
       calificacion,
     } = req.body;
 
+    console.log("📊 Datos recibidos:", {
+      inscripcion_id,
+      resultado_aprendizaje_id,
+      oportunidad,
+      calificacion,
+      tipoCalificacion: typeof calificacion,
+    });
+
+    // Validaciones
     if (
       !inscripcion_id ||
       !resultado_aprendizaje_id ||
@@ -495,70 +513,143 @@ exports.registrarCalificacionModulo = async (req, res) => {
     if (oportunidad < 1 || oportunidad > 4) {
       return res.status(400).json({
         success: false,
-        message: "La oportunidad debe ser entre 1 y 4",
+        message: "La oportunidad debe estar entre 1 y 4",
       });
     }
 
-    // Obtener el RA para validar
+    // Obtener información del RA
     const [ra] = await query(
-      "SELECT porcentaje FROM resultados_aprendizaje WHERE id = ?",
+      `SELECT id, nombre, porcentaje FROM resultados_aprendizaje WHERE id = ?`,
       [resultado_aprendizaje_id]
     );
+
+    console.log("📋 RA encontrado:", ra);
 
     if (!ra) {
       return res.status(404).json({
         success: false,
-        message: "Resultado de aprendizaje no encontrado",
+        message: "Resultado de Aprendizaje no encontrado",
       });
     }
 
-    // Calcular mínimo aprobatorio (70% del porcentaje del RA)
-    const minimoAprobatorio = parseFloat(ra.porcentaje) * 0.7;
-    const completado = calificacion >= minimoAprobatorio;
+    // ✅ Asegurar que todos los valores sean números válidos
+    const calificacionSobre100 = parseFloat(calificacion);
+    const porcentajeRA = parseFloat(ra.porcentaje);
 
-    // Verificar si ya existe
-    const [existente] = await query(
-      `SELECT id FROM calificaciones_modulos
-       WHERE inscripcion_id = ? AND resultado_aprendizaje_id = ? AND oportunidad = ?`,
-      [inscripcion_id, resultado_aprendizaje_id, oportunidad]
-    );
+    if (isNaN(calificacionSobre100) || isNaN(porcentajeRA)) {
+      return res.status(400).json({
+        success: false,
+        message: "Calificación o porcentaje inválido",
+      });
+    }
 
-    if (existente) {
-      // Actualizar
-      await query(
-        `UPDATE calificaciones_modulos
-         SET calificacion = ?, completado = ?, registrado_por = ?
-         WHERE id = ?`,
-        [calificacion, completado, req.user.id, existente.id]
+    const calificacionConvertida = (calificacionSobre100 / 100) * porcentajeRA;
+    const minimoRA = (70 / 100) * porcentajeRA;
+    const completado = calificacionConvertida >= minimoRA ? 1 : 0;
+
+    // ✅ Asegurar que registrado_por sea null si no existe
+    const registradoPor =
+      req.user && typeof req.user.id === "number" ? req.user.id : null;
+
+    console.log("💾 Valores a guardar:", {
+      calificacionSobre100,
+      calificacionConvertida,
+      porcentajeRA,
+      minimoRA,
+      completado,
+      registradoPor,
+    });
+
+    await transaction(async (connection) => {
+      // Verificar si ya existe
+      const [rows] = await connection.execute(
+        `SELECT id FROM calificaciones_modulos 
+         WHERE inscripcion_id = ? 
+         AND resultado_aprendizaje_id = ? 
+         AND oportunidad = ?`,
+        [inscripcion_id, resultado_aprendizaje_id, oportunidad]
       );
-    } else {
-      // Insertar
-      await query(
-        `INSERT INTO calificaciones_modulos 
-         (inscripcion_id, resultado_aprendizaje_id, oportunidad, calificacion, completado, registrado_por)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [
+
+      const existing = rows && rows.length > 0 ? rows[0] : null;
+
+      console.log("🔍 Registro existente:", existing);
+
+      if (existing) {
+        // ✅ Actualizar - TODOS los valores deben estar definidos
+        const updateParams = [
+          calificacionConvertida,
+          calificacionSobre100,
+          completado,
+          registradoPor,
+          existing.id,
+        ];
+
+        console.log("🔄 UPDATE con parámetros:", updateParams);
+
+        // Verificar que ningún parámetro sea undefined
+        const hasUndefined = updateParams.some((p) => p === undefined);
+        if (hasUndefined) {
+          console.error("❌ Parámetro undefined detectado:", updateParams);
+          throw new Error("Parámetro undefined en UPDATE");
+        }
+
+        await connection.execute(
+          `UPDATE calificaciones_modulos 
+           SET calificacion = ?,
+               calificacion_sobre_100 = ?,
+               completado = ?,
+               registrado_por = ?,
+               fecha_registro = NOW()
+           WHERE id = ?`,
+          updateParams
+        );
+      } else {
+        // ✅ Insertar - TODOS los valores deben estar definidos
+        const insertParams = [
           inscripcion_id,
           resultado_aprendizaje_id,
           oportunidad,
-          calificacion,
+          calificacionConvertida,
+          calificacionSobre100,
           completado,
-          req.user.id,
-        ]
-      );
-    }
+          registradoPor,
+        ];
+
+        console.log("➕ INSERT con parámetros:", insertParams);
+
+        // Verificar que ningún parámetro sea undefined
+        const hasUndefined = insertParams.some((p) => p === undefined);
+        if (hasUndefined) {
+          console.error("❌ Parámetro undefined detectado:", insertParams);
+          throw new Error("Parámetro undefined en INSERT");
+        }
+
+        await connection.execute(
+          `INSERT INTO calificaciones_modulos 
+           (inscripcion_id, resultado_aprendizaje_id, oportunidad, calificacion, calificacion_sobre_100, completado, registrado_por, fecha_registro) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+          insertParams
+        );
+      }
+    });
+
+    console.log("✅ Calificación guardada exitosamente");
 
     res.json({
       success: true,
       message: "Calificación registrada exitosamente",
-      completado,
-      minimo_aprobatorio: minimoAprobatorio.toFixed(2),
+      calificacion_ingresada: calificacionSobre100.toFixed(2),
+      calificacion_convertida: calificacionConvertida.toFixed(2),
+      porcentaje_ra: porcentajeRA,
+      completado: completado === 1,
+      minimo_requerido: minimoRA.toFixed(2),
     });
   } catch (error) {
-    console.error("Error registrando calificación de módulo:", error);
+    console.error("❌ Error registrando calificación de módulo:", error);
     res.status(500).json({
       success: false,
-      message: "Error al registrar calificación",
+      message: "Error al registrar calificación de módulo",
+      error: error.message,
     });
   }
 };
@@ -568,9 +659,9 @@ exports.getCalificacionesModulo = async (req, res) => {
   try {
     const { inscripcionId } = req.params;
 
-    // Obtener la materia de la inscripción
+    // Obtener materia de la inscripción
     const [inscripcion] = await query(
-      "SELECT materia_id FROM inscripciones WHERE id = ?",
+      `SELECT materia_id FROM inscripciones WHERE id = ?`,
       [inscripcionId]
     );
 
@@ -581,79 +672,163 @@ exports.getCalificacionesModulo = async (req, res) => {
       });
     }
 
-    // Obtener todos los RA de la materia
+    // Obtener resultados de aprendizaje
     const resultados = await query(
-      `SELECT * FROM resultados_aprendizaje
-       WHERE materia_id = ?
-       ORDER BY orden`,
+      `SELECT id, nombre, porcentaje 
+       FROM resultados_aprendizaje 
+       WHERE materia_id = ? 
+       ORDER BY orden, id`,
       [inscripcion.materia_id]
     );
 
-    // Obtener calificaciones del estudiante
+    // Obtener calificaciones
     const calificaciones = await query(
-      `SELECT * FROM calificaciones_modulos
+      `SELECT 
+        resultado_aprendizaje_id,
+        oportunidad,
+        calificacion,
+        calificacion_sobre_100,
+        completado,
+        fecha_registro
+       FROM calificaciones_modulos 
        WHERE inscripcion_id = ?
        ORDER BY resultado_aprendizaje_id, oportunidad`,
       [inscripcionId]
     );
 
-    // Organizar calificaciones por RA
-    const resultadosConCalificaciones = resultados.map((ra) => {
-      const califs = calificaciones.filter(
+    // Organizar datos por RA
+    const resultadosConCalif = resultados.map((ra) => {
+      const califsRA = calificaciones.filter(
         (c) => c.resultado_aprendizaje_id === ra.id
       );
 
-      // Organizar por oportunidad
-      const oportunidades = [1, 2, 3, 4].map((opp) => {
-        const calif = califs.find((c) => c.oportunidad === opp);
-        return calif
-          ? {
-              calificacion: parseFloat(calif.calificacion),
-              completado: calif.completado,
-            }
-          : null;
+      const oportunidades = {};
+      califsRA.forEach((c) => {
+        // Si existe calificacion_sobre_100, usarla; si no, calcularla
+        const califSobre100 =
+          c.calificacion_sobre_100 !== null
+            ? parseFloat(c.calificacion_sobre_100)
+            : (parseFloat(c.calificacion) / ra.porcentaje) * 100;
+
+        oportunidades[c.oportunidad - 1] = {
+          oportunidad: c.oportunidad,
+          calificacion: parseFloat(c.calificacion), // Convertida (para cálculo)
+          calificacion_sobre_100: parseFloat(califSobre100.toFixed(2)), // Original (para mostrar)
+          completado: c.completado === 1,
+          fecha: c.fecha_registro,
+        };
       });
 
-      // Encontrar la última calificación completada
-      const ultimaCompletada = [...califs].reverse().find((c) => c.completado);
+      // Buscar si alguna oportunidad completó el RA
+      const completada = califsRA.find((c) => c.completado === 1);
 
       return {
-        ...ra,
-        porcentaje: parseFloat(ra.porcentaje),
-        minimo_aprobatorio: (parseFloat(ra.porcentaje) * 0.7).toFixed(2),
-        oportunidades,
-        calificacion_final: ultimaCompletada
-          ? parseFloat(ultimaCompletada.calificacion)
+        id: ra.id,
+        nombre: ra.nombre,
+        porcentaje: ra.porcentaje,
+        oportunidades: oportunidades,
+        completado: !!completada,
+        calificacion_final: completada
+          ? parseFloat(completada.calificacion)
           : 0,
-        completado: !!ultimaCompletada,
       };
     });
 
     // Calcular calificación final del módulo
-    const calificacionFinal = resultadosConCalificaciones
-      .filter((r) => r.completado)
-      .reduce((sum, r) => sum + r.calificacion_final, 0);
+    let calificacionFinal = 0;
+    let todosCompletados = true;
 
-    const todosCompletados = resultadosConCalificaciones.every(
-      (r) => r.completado
-    );
+    resultadosConCalif.forEach((ra) => {
+      if (ra.completado) {
+        calificacionFinal += ra.calificacion_final;
+      } else {
+        todosCompletados = false;
+      }
+    });
+
+    const aprobado = todosCompletados && calificacionFinal >= 70;
 
     res.json({
       success: true,
-      resultados: resultadosConCalificaciones,
+      resultados: resultadosConCalif,
       calificacion_final: calificacionFinal.toFixed(2),
-      aprobado: todosCompletados && calificacionFinal >= 70,
       todos_completados: todosCompletados,
+      aprobado: aprobado,
     });
   } catch (error) {
     console.error("Error obteniendo calificaciones de módulo:", error);
     res.status(500).json({
       success: false,
-      message: "Error al obtener calificaciones",
+      message: "Error al obtener calificaciones de módulo",
+      error: error.message,
     });
   }
 };
 
+exports.updateResultadoAprendizaje = async (req, res) => {
+  try {
+    const { materiaId, raId } = req.params;
+    const { porcentaje, nombre, descripcion } = req.body;
+
+    // Validar que el RA pertenece a la materia
+    const [ra] = await query(
+      `SELECT id FROM resultados_aprendizaje WHERE id = ? AND materia_id = ?`,
+      [raId, materiaId]
+    );
+
+    if (!ra) {
+      return res.status(404).json({
+        success: false,
+        message: "Resultado de Aprendizaje no encontrado",
+      });
+    }
+
+    // Construir query dinámico
+    const updates = [];
+    const values = [];
+
+    if (porcentaje !== undefined) {
+      updates.push("porcentaje = ?");
+      values.push(parseFloat(porcentaje));
+    }
+
+    if (nombre !== undefined) {
+      updates.push("nombre = ?");
+      values.push(nombre);
+    }
+
+    if (descripcion !== undefined) {
+      updates.push("descripcion = ?");
+      values.push(descripcion);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No hay datos para actualizar",
+      });
+    }
+
+    values.push(raId);
+
+    await query(
+      `UPDATE resultados_aprendizaje SET ${updates.join(", ")} WHERE id = ?`,
+      values
+    );
+
+    res.json({
+      success: true,
+      message: "Resultado de Aprendizaje actualizado exitosamente",
+    });
+  } catch (error) {
+    console.error("Error actualizando Resultado de Aprendizaje:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al actualizar Resultado de Aprendizaje",
+      error: error.message,
+    });
+  }
+};
 // ==========================================
 // REPORTES (VERSIÓN DEFINITIVA CON IDs CORRECTOS)
 // ==========================================
@@ -779,13 +954,14 @@ exports.getReporteEstudiante = async (req, res) => {
             ra.porcentaje,
             cm.oportunidad,
             cm.calificacion,
+            cm.calificacion_sobre_100,
             cm.completado
           FROM resultados_aprendizaje ra
           LEFT JOIN calificaciones_modulos cm ON ra.id = cm.resultado_aprendizaje_id 
             AND cm.inscripcion_id = ?
           WHERE ra.materia_id = ?
-          ORDER BY ra.id, cm.oportunidad
-        `,
+          ORDER BY ra.orden, ra.id, cm.oportunidad
+      `,
           [inscripcion.id, inscripcion.materia_id]
         );
 

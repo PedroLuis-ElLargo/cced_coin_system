@@ -271,7 +271,6 @@ class ModalHandler {
   async generateCode() {
     // ✅ Prevenir ejecuciones simultáneas
     if (this.isGeneratingCode) {
-      console.log("Ya se está generando un código...");
       return;
     }
 
@@ -330,8 +329,10 @@ class ModalHandler {
             await codesModule.default.loadData();
           }
         } catch (err) {
-          console.log(
-            "No se pudo recargar automáticamente la lista de códigos"
+          console.error("Error recargando lista de códigos:", err);
+          uiService.showNotification(
+            "❌ Error al recargar la lista de códigos",
+            NOTIFICATION_TYPES.ERROR
           );
         }
       } else {

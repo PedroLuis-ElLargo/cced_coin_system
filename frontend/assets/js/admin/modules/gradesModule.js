@@ -1912,7 +1912,7 @@ class GradesModule {
       });
     });
   }
-
+  /*
   showEditModuloGradeModal(
     inscripcionId,
     raId,
@@ -1982,6 +1982,499 @@ Ingrese la calificación (0-100):
     if (!confirmar) return;
 
     this.saveModuloGrade(inscripcionId, raId, oportunidad, calif);
+  }
+*/
+
+  showEditModuloGradeModal(
+    inscripcionId,
+    raId,
+    oportunidad,
+    calificacionActual,
+    estudianteNombre,
+    raPorcentaje,
+    raNombre
+  ) {
+    const oppName =
+      oportunidad == 4 ? "Evaluación Especial" : `Oportunidad ${oportunidad}`;
+    const modalId = "moduloGradeModal";
+
+    // Remover modal anterior si existe
+    const existingModal = document.getElementById(modalId);
+    if (existingModal) {
+      existingModal.remove();
+    }
+
+    // Crear el modal
+    const modalHTML = `
+    <div id="${modalId}" class="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn" style="background-color: rgba(0, 0, 0, 0.5);">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slideUp">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white rounded-t-2xl">
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="text-2xl font-bold mb-2">
+                <i data-lucide="award" class="w-6 h-6 inline mr-2"></i>
+                Calificación de Módulo Formativo
+              </h3>
+              <p class="text-purple-100 text-sm">Ordenanza 04-2023 - Evaluación por Competencias</p>
+            </div>
+            <button id="closeModal" class="text-white hover:bg-white/20 rounded-lg p-2 transition-colors">
+              <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 space-y-6">
+          <!-- Información del Estudiante y RA -->
+          <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-5 border border-purple-200">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-3">
+                <div class="flex items-center">
+                  <div class="p-2 bg-purple-200 rounded-lg mr-3">
+                    <i data-lucide="user" class="w-5 h-5 text-purple-700"></i>
+                  </div>
+                  <div>
+                    <p class="text-xs text-slate-600">Estudiante</p>
+                    <p class="font-bold text-slate-800">${estudianteNombre}</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-center">
+                  <div class="p-2 bg-indigo-200 rounded-lg mr-3">
+                    <i data-lucide="target" class="w-5 h-5 text-indigo-700"></i>
+                  </div>
+                  <div>
+                    <p class="text-xs text-slate-600">Resultado de Aprendizaje</p>
+                    <p class="font-bold text-slate-800">${raNombre}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                <div class="flex items-center">
+                  <div class="p-2 bg-blue-200 rounded-lg mr-3">
+                    <i data-lucide="percent" class="w-5 h-5 text-blue-700"></i>
+                  </div>
+                  <div>
+                    <p class="text-xs text-slate-600">Porcentaje del RA</p>
+                    <p class="font-bold text-slate-800 text-xl">${raPorcentaje}%</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-center">
+                  <div class="p-2 bg-amber-200 rounded-lg mr-3">
+                    <i data-lucide="flag" class="w-5 h-5 text-amber-700"></i>
+                  </div>
+                  <div>
+                    <p class="text-xs text-slate-600">Oportunidad</p>
+                    <p class="font-bold text-slate-800">${oppName}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Campo de Calificación -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-3">
+              <i data-lucide="edit-3" class="w-4 h-4 inline mr-2 text-indigo-600"></i>
+              Ingresar Calificación (sobre 100 puntos)
+            </label>
+            <div class="relative">
+              <input 
+                type="number" 
+                id="calificacionInput" 
+                min="0" 
+                max="100" 
+                step="0.01"
+                value="${calificacionActual || ""}"
+                placeholder="Ejemplo: 85"
+                class="w-full px-4 py-4 text-2xl font-bold text-center border-3 border-indigo-300 rounded-xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 transition-all"
+                autofocus
+              />
+              <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-2xl font-bold text-slate-400">/100</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-2 flex items-center">
+              <i data-lucide="info" class="w-3 h-3 mr-1"></i>
+              Ingresa la calificación sobre una escala de 0 a 100 puntos
+            </p>
+          </div>
+
+          <!-- Visualización de Conversión en Tiempo Real -->
+          <div id="conversionPreview" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl p-5 hidden">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center">
+                <i data-lucide="trending-up" class="w-5 h-5 mr-2"></i>
+                <h4 class="font-bold">Conversión Automática</h4>
+              </div>
+              <div id="statusBadge"></div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-4 text-center">
+              <div class="bg-white/20 backdrop-blur rounded-lg p-3">
+                <p class="text-xs text-indigo-100 mb-1">Calificación</p>
+                <p id="califOriginal" class="text-2xl font-bold">-</p>
+              </div>
+              <div class="bg-white/20 backdrop-blur rounded-lg p-3">
+                <p class="text-xs text-indigo-100 mb-1">Equivale a</p>
+                <p id="califConvertida" class="text-2xl font-bold">-</p>
+              </div>
+              <div class="bg-white/20 backdrop-blur rounded-lg p-3">
+                <p class="text-xs text-indigo-100 mb-1">Mínimo</p>
+                <p id="califMinimo" class="text-2xl font-bold">-</p>
+              </div>
+            </div>
+
+            <div class="mt-3 text-center">
+              <p id="resultadoTexto" class="text-sm"></p>
+            </div>
+          </div>
+
+          <!-- Ejemplo Explicativo -->
+          <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <div class="flex items-start">
+              <div class="p-2 bg-amber-200 rounded-lg mr-3">
+                <i data-lucide="lightbulb" class="w-5 h-5 text-amber-700"></i>
+              </div>
+              <div class="flex-1">
+                <h5 class="font-bold text-amber-900 mb-2">💡 ¿Cómo funciona la conversión?</h5>
+                <p class="text-sm text-amber-800 mb-2">
+                  <strong>Ejemplo:</strong> Si calificas con <strong>80 puntos</strong> y el RA vale <strong>${raPorcentaje}%</strong>:
+                </p>
+                <div class="bg-white rounded-lg p-3 text-sm">
+                  <p class="text-amber-900">
+                    → El sistema registrará: <strong class="text-indigo-600">${(
+                      (80 / 100) *
+                      parseFloat(raPorcentaje)
+                    ).toFixed(
+                      2
+                    )} puntos</strong> (que es el 80% de ${raPorcentaje})
+                  </p>
+                  <p class="text-amber-700 mt-2 text-xs">
+                    ✓ Mínimo aprobatorio: <strong>${(
+                      (70 / 100) *
+                      parseFloat(raPorcentaje)
+                    ).toFixed(2)} puntos</strong> (70% de ${raPorcentaje})
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-slate-50 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
+          <button 
+            id="cancelarBtn"
+            class="px-6 py-3 bg-white hover:bg-slate-100 text-slate-700 rounded-xl font-semibold transition-colors border border-slate-300"
+          >
+            <i data-lucide="x" class="w-4 h-4 inline mr-2"></i>
+            Cancelar
+          </button>
+          <button 
+            id="guardarBtn"
+            class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+          >
+            <i data-lucide="save" class="w-4 h-4 inline mr-2"></i>
+            Guardar Calificación
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+    // Agregar estilos de animación (solo una vez)
+    if (!document.getElementById("moduloModalStyles")) {
+      const style = document.createElement("style");
+      style.id = "moduloModalStyles";
+      style.textContent = `
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+      @keyframes slideUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.2s ease-out;
+      }
+      .animate-slideUp {
+        animation: slideUp 0.3s ease-out;
+      }
+      #calificacionInput::-webkit-outer-spin-button,
+      #calificacionInput::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      #calificacionInput[type=number] {
+        -moz-appearance: textfield;
+      }
+    `;
+      document.head.appendChild(style);
+    }
+
+    // Agregar modal al DOM
+    document.body.insertAdjacentHTML("beforeend", modalHTML);
+
+    // Inicializar iconos de Lucide
+    lucide.createIcons();
+
+    // Referencias a elementos
+    const modal = document.getElementById(modalId);
+    const input = document.getElementById("calificacionInput");
+    const guardarBtn = document.getElementById("guardarBtn");
+    const cancelarBtn = document.getElementById("cancelarBtn");
+    const closeBtn = document.getElementById("closeModal");
+    const conversionPreview = document.getElementById("conversionPreview");
+
+    // Función para actualizar la previsualización
+    const updatePreview = () => {
+      const valor = parseFloat(input.value);
+
+      if (isNaN(valor) || valor === "") {
+        conversionPreview.classList.add("hidden");
+        guardarBtn.disabled = true;
+        return;
+      }
+
+      if (valor < 0 || valor > 100) {
+        conversionPreview.classList.add("hidden");
+        guardarBtn.disabled = true;
+        input.classList.add("border-red-500");
+        input.classList.remove("border-indigo-300");
+        return;
+      }
+
+      input.classList.remove("border-red-500");
+      input.classList.add("border-indigo-300");
+      guardarBtn.disabled = false;
+      conversionPreview.classList.remove("hidden");
+
+      const convertida = (valor / 100) * parseFloat(raPorcentaje);
+      const minimo = (70 / 100) * parseFloat(raPorcentaje);
+      const aprueba = convertida >= minimo;
+
+      document.getElementById("califOriginal").textContent = valor.toFixed(1);
+      document.getElementById("califConvertida").textContent =
+        convertida.toFixed(2);
+      document.getElementById("califMinimo").textContent = minimo.toFixed(2);
+
+      const statusBadge = document.getElementById("statusBadge");
+      const resultadoTexto = document.getElementById("resultadoTexto");
+
+      if (aprueba) {
+        statusBadge.innerHTML =
+          '<span class="px-3 py-1 bg-green-500 text-white rounded-full text-xs font-bold">✓ APROBADO</span>';
+        resultadoTexto.innerHTML =
+          "🎉 <strong>¡Excelente!</strong> Esta calificación cumple con el mínimo aprobatorio";
+      } else {
+        statusBadge.innerHTML =
+          '<span class="px-3 py-1 bg-red-500 text-white rounded-full text-xs font-bold">✗ NO APROBADO</span>';
+        resultadoTexto.innerHTML =
+          "⚠️ Esta calificación <strong>no alcanza</strong> el mínimo aprobatorio de 70%";
+      }
+    };
+
+    // Event listeners
+    input.addEventListener("input", updatePreview);
+    input.addEventListener("keypress", (e) => {
+      if (e.key === "Enter" && !guardarBtn.disabled) {
+        guardarBtn.click();
+      }
+    });
+
+    const closeModal = () => {
+      modal.style.animation = "fadeOut 0.2s ease-out";
+      setTimeout(() => modal.remove(), 200);
+    };
+
+    closeBtn.addEventListener("click", closeModal);
+    cancelarBtn.addEventListener("click", closeModal);
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    guardarBtn.addEventListener("click", () => {
+      const valor = parseFloat(input.value);
+
+      if (isNaN(valor) || valor < 0 || valor > 100) {
+        uiService.showNotification(
+          "❌ La calificación debe ser un número entre 0 y 100",
+          NOTIFICATION_TYPES.ERROR
+        );
+        return;
+      }
+
+      // Mostrar modal de confirmación
+      this.showConfirmacionModal(
+        inscripcionId,
+        raId,
+        oportunidad,
+        valor,
+        raPorcentaje,
+        estudianteNombre,
+        raNombre,
+        oppName
+      );
+      closeModal();
+    });
+
+    // Actualizar preview inicial si hay calificación
+    if (calificacionActual) {
+      updatePreview();
+    }
+
+    // Focus en el input
+    setTimeout(() => input.focus(), 100);
+  }
+
+  showConfirmacionModal(
+    inscripcionId,
+    raId,
+    oportunidad,
+    calificacion,
+    raPorcentaje,
+    estudianteNombre,
+    raNombre,
+    oppName
+  ) {
+    const modalId = "confirmacionModal";
+    const convertida = (calificacion / 100) * parseFloat(raPorcentaje);
+    const minimo = (70 / 100) * parseFloat(raPorcentaje);
+    const aprueba = convertida >= minimo;
+
+    const modalHTML = `
+    <div id="${modalId}" class="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn" style="background-color: rgba(0, 0, 0, 0.6);">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full animate-slideUp">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white rounded-t-2xl">
+          <div class="flex items-center">
+            <div class="p-3 bg-white/20 rounded-full mr-4">
+              <i data-lucide="check-circle" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold">Confirmar Calificación</h3>
+              <p class="text-indigo-100 text-sm">Revisa los datos antes de guardar</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 space-y-4">
+          <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+            <p class="text-sm text-slate-600 mb-2">Estudiante</p>
+            <p class="font-bold text-slate-800">${estudianteNombre}</p>
+            <p class="text-xs text-slate-500 mt-1">${raNombre} - ${oppName}</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-blue-50 rounded-xl p-4 text-center border border-blue-200">
+              <p class="text-xs text-blue-600 mb-1">Calificación Ingresada</p>
+              <p class="text-3xl font-bold text-blue-700">${calificacion.toFixed(
+                1
+              )}</p>
+              <p class="text-xs text-blue-600">sobre 100</p>
+            </div>
+            
+            <div class="bg-purple-50 rounded-xl p-4 text-center border border-purple-200">
+              <p class="text-xs text-purple-600 mb-1">Se Registrará</p>
+              <p class="text-3xl font-bold text-purple-700">${convertida.toFixed(
+                2
+              )}</p>
+              <p class="text-xs text-purple-600">del ${raPorcentaje}%</p>
+            </div>
+          </div>
+
+          <div class="bg-${aprueba ? "green" : "red"}-50 border border-${
+      aprueba ? "green" : "red"
+    }-200 rounded-xl p-4">
+            <div class="flex items-center">
+              <i data-lucide="${
+                aprueba ? "check-circle" : "alert-circle"
+              }" class="w-6 h-6 text-${aprueba ? "green" : "red"}-600 mr-3"></i>
+              <div class="flex-1">
+                <p class="font-bold text-${aprueba ? "green" : "red"}-900 mb-1">
+                  ${aprueba ? "✓ RA Completado" : "✗ No Alcanza el Mínimo"}
+                </p>
+                <p class="text-sm text-${aprueba ? "green" : "red"}-700">
+                  ${
+                    aprueba
+                      ? `La calificación supera el mínimo requerido de ${minimo.toFixed(
+                          2
+                        )} puntos`
+                      : `Se requiere mínimo ${minimo.toFixed(
+                          2
+                        )} puntos (70% del ${raPorcentaje}%)`
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-slate-50 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
+          <button 
+            id="cancelarConfirmacion"
+            class="px-6 py-3 bg-white hover:bg-slate-100 text-slate-700 rounded-xl font-semibold transition-colors border border-slate-300"
+          >
+            <i data-lucide="arrow-left" class="w-4 h-4 inline mr-2"></i>
+            Regresar
+          </button>
+          <button 
+            id="confirmarGuardar"
+            class="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl"
+          >
+            <i data-lucide="check" class="w-4 h-4 inline mr-2"></i>
+            Confirmar y Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+    document.body.insertAdjacentHTML("beforeend", modalHTML);
+    lucide.createIcons();
+
+    const modal = document.getElementById(modalId);
+    const cancelarBtn = document.getElementById("cancelarConfirmacion");
+    const confirmarBtn = document.getElementById("confirmarGuardar");
+
+    const closeModal = () => {
+      modal.style.animation = "fadeOut 0.2s ease-out";
+      setTimeout(() => modal.remove(), 200);
+    };
+
+    cancelarBtn.addEventListener("click", () => {
+      closeModal();
+      // Volver a abrir el modal de edición
+      this.showEditModuloGradeModal(
+        inscripcionId,
+        raId,
+        oportunidad,
+        calificacion,
+        estudianteNombre,
+        raPorcentaje,
+        raNombre
+      );
+    });
+
+    confirmarBtn.addEventListener("click", () => {
+      closeModal();
+      this.saveModuloGrade(inscripcionId, raId, oportunidad, calificacion);
+    });
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
   }
 
   async saveModuloGrade(inscripcionId, raId, oportunidad, calificacion) {

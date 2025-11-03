@@ -312,6 +312,30 @@ class ApiService {
       method: "GET",
     });
   }
+  // ==========================================
+  // ACTIVIDADES RECIENTES
+  // ==========================================
+
+  /**
+   * Obtener actividades recientes del sistema
+   * @param {number} limit - Cantidad de actividades a obtener (default: 15)
+   * @returns {Promise} Promesa con las actividades
+   */
+  async getActividadesRecientes(limit = 15) {
+    return this.request(`/admin/actividades-recientes?limit=${limit}`, {
+      method: "GET",
+    });
+  }
+
+  /**
+   * Limpiar actividades antiguas (más de 30 días)
+   * @returns {Promise} Promesa con resultado de limpieza
+   */
+  async limpiarActividadesAntiguas() {
+    return this.request("/admin/actividades-recientes/limpiar", {
+      method: "DELETE",
+    });
+  }
 }
 
 export default new ApiService();

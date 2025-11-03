@@ -441,3 +441,29 @@ CREATE TABLE historial_calificaciones (
     INDEX idx_calificacion (calificacion_id),
     INDEX idx_fecha (fecha_modificacion)
 ) ENGINE=InnoDB;
+
+CREATE TABLE actividades_recientes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tipo VARCHAR(50) NOT NULL,
+    icono VARCHAR(50) NOT NULL,
+    color VARCHAR(50) NOT NULL,
+    titulo TEXT NOT NULL,
+    realizado_por INT,
+    usuario_afectado_id INT,
+    materia_id INT NULL,
+    tarea_id INT NULL,
+    examen_id INT NULL,
+    inscripcion_id INT NULL,
+    metadata JSON,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (realizado_por) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (usuario_afectado_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (materia_id) REFERENCES materias(id) ON DELETE CASCADE,
+    FOREIGN KEY (tarea_id) REFERENCES tasks(id) ON DELETE CASCADE,
+    FOREIGN KEY (examen_id) REFERENCES exams(id) ON DELETE CASCADE,
+    FOREIGN KEY (inscripcion_id) REFERENCES inscripciones(id) ON DELETE CASCADE,
+    
+    INDEX idx_fecha (fecha_creacion DESC),
+    INDEX idx_tipo (tipo),
+    INDEX idx_usuario_afectado (usuario_afectado_id)
+) ENGINE=InnoDB;

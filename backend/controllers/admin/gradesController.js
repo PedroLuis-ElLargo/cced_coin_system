@@ -3,6 +3,7 @@
 // ==========================================
 
 const { query, transaction } = require("../../config/database");
+const ActivityLogger = require("../../utils/activityLogger.js");
 
 // ==========================================
 // PERIODOS ESCOLARES
@@ -389,6 +390,7 @@ exports.registrarCalificacionAcademica = async (req, res) => {
   try {
     const { inscripcion_id, periodo_evaluacion, calificacion } = req.body;
 
+    // Validaciones
     if (!inscripcion_id || !periodo_evaluacion || calificacion === undefined) {
       return res.status(400).json({
         success: false,
@@ -396,46 +398,89 @@ exports.registrarCalificacionAcademica = async (req, res) => {
       });
     }
 
-    if (calificacion < 0 || calificacion > 100) {
+    if (periodo_evaluacion < 1 || periodo_evaluacion > 4) {
+      return res.status(400).json({
+        success: false,
+        message: "El periodo debe estar entre 1 y 4",
+      });
+    }
+
+    const calif = parseFloat(calificacion);
+    if (isNaN(calif) || calif < 0 || calif > 100) {
       return res.status(400).json({
         success: false,
         message: "La calificación debe estar entre 0 y 100",
       });
     }
 
-    // Verificar si ya existe una calificación
-    const [existente] = await query(
-      `SELECT id FROM calificaciones_academicas
+    // ✅ OBTENER DATOS PARA LA ACTIVIDAD
+    const [inscripcion] = await query(
+      `SELECT 
+        u.nombre as estudiante_nombre,
+        u.id as estudiante_id,
+        m.nombre as materia_nombre,
+        m.id as materia_id
+       FROM inscripciones i
+       JOIN users u ON i.estudiante_id = u.id
+       JOIN materias m ON i.materia_id = m.id
+       WHERE i.id = ?`,
+      [inscripcion_id]
+    );
+
+    if (!inscripcion) {
+      return res.status(404).json({
+        success: false,
+        message: "Inscripción no encontrada",
+      });
+    }
+
+    // Verificar si ya existe
+    const [existing] = await query(
+      `SELECT id FROM calificaciones_academicas 
        WHERE inscripcion_id = ? AND periodo_evaluacion = ?`,
       [inscripcion_id, periodo_evaluacion]
     );
 
-    if (existente) {
+    if (existing) {
       // Actualizar
       await query(
-        `UPDATE calificaciones_academicas
-         SET calificacion = ?, registrado_por = ?
+        `UPDATE calificaciones_academicas 
+         SET calificacion = ?, registrado_por = ?, fecha_registro = NOW() 
          WHERE id = ?`,
-        [calificacion, req.user.id, existente.id]
+        [calif, req.user?.id || null, existing.id]
       );
     } else {
       // Insertar
       await query(
-        `INSERT INTO calificaciones_academicas (inscripcion_id, periodo_evaluacion, calificacion, registrado_por)
+        `INSERT INTO calificaciones_academicas 
+         (inscripcion_id, periodo_evaluacion, calificacion, registrado_por) 
          VALUES (?, ?, ?, ?)`,
-        [inscripcion_id, periodo_evaluacion, calificacion, req.user.id]
+        [inscripcion_id, periodo_evaluacion, calif, req.user?.id || null]
       );
     }
+
+    // ✅ REGISTRAR ACTIVIDAD
+    await ActivityLogger.logCalificacionAcademica({
+      estudiante_nombre: inscripcion.estudiante_nombre,
+      materia_nombre: inscripcion.materia_nombre,
+      calificacion: calif,
+      periodo: periodo_evaluacion,
+      realizado_por: req.user?.id,
+      usuario_afectado_id: inscripcion.estudiante_id,
+      materia_id: inscripcion.materia_id,
+      inscripcion_id: inscripcion_id,
+    });
 
     res.json({
       success: true,
       message: "Calificación registrada exitosamente",
     });
   } catch (error) {
-    console.error("Error registrando calificación:", error);
+    console.error("Error registrando calificación académica:", error);
     res.status(500).json({
       success: false,
-      message: "Error al registrar calificación",
+      message: "Error al registrar calificación académica",
+      error: error.message,
     });
   }
 };
@@ -489,14 +534,6 @@ exports.registrarCalificacionModulo = async (req, res) => {
       calificacion,
     } = req.body;
 
-    console.log("📊 Datos recibidos:", {
-      inscripcion_id,
-      resultado_aprendizaje_id,
-      oportunidad,
-      calificacion,
-      tipoCalificacion: typeof calificacion,
-    });
-
     // Validaciones
     if (
       !inscripcion_id ||
@@ -523,8 +560,6 @@ exports.registrarCalificacionModulo = async (req, res) => {
       [resultado_aprendizaje_id]
     );
 
-    console.log("📋 RA encontrado:", ra);
-
     if (!ra) {
       return res.status(404).json({
         success: false,
@@ -532,7 +567,27 @@ exports.registrarCalificacionModulo = async (req, res) => {
       });
     }
 
-    // ✅ Asegurar que todos los valores sean números válidos
+    // ✅ OBTENER DATOS DEL ESTUDIANTE Y MATERIA PARA LA ACTIVIDAD
+    const [datos] = await query(
+      `SELECT 
+        u.nombre as estudiante_nombre,
+        u.id as estudiante_id,
+        m.nombre as materia_nombre,
+        m.id as materia_id
+       FROM inscripciones i
+       JOIN users u ON i.estudiante_id = u.id
+       JOIN materias m ON i.materia_id = m.id
+       WHERE i.id = ?`,
+      [inscripcion_id]
+    );
+
+    if (!datos) {
+      return res.status(404).json({
+        success: false,
+        message: "Inscripción no encontrada",
+      });
+    }
+
     const calificacionSobre100 = parseFloat(calificacion);
     const porcentajeRA = parseFloat(ra.porcentaje);
 
@@ -547,21 +602,10 @@ exports.registrarCalificacionModulo = async (req, res) => {
     const minimoRA = (70 / 100) * porcentajeRA;
     const completado = calificacionConvertida >= minimoRA ? 1 : 0;
 
-    // ✅ Asegurar que registrado_por sea null si no existe
     const registradoPor =
       req.user && typeof req.user.id === "number" ? req.user.id : null;
 
-    console.log("💾 Valores a guardar:", {
-      calificacionSobre100,
-      calificacionConvertida,
-      porcentajeRA,
-      minimoRA,
-      completado,
-      registradoPor,
-    });
-
     await transaction(async (connection) => {
-      // Verificar si ya existe
       const [rows] = await connection.execute(
         `SELECT id FROM calificaciones_modulos 
          WHERE inscripcion_id = ? 
@@ -572,27 +616,8 @@ exports.registrarCalificacionModulo = async (req, res) => {
 
       const existing = rows && rows.length > 0 ? rows[0] : null;
 
-      console.log("🔍 Registro existente:", existing);
-
       if (existing) {
-        // ✅ Actualizar - TODOS los valores deben estar definidos
-        const updateParams = [
-          calificacionConvertida,
-          calificacionSobre100,
-          completado,
-          registradoPor,
-          existing.id,
-        ];
-
-        console.log("🔄 UPDATE con parámetros:", updateParams);
-
-        // Verificar que ningún parámetro sea undefined
-        const hasUndefined = updateParams.some((p) => p === undefined);
-        if (hasUndefined) {
-          console.error("❌ Parámetro undefined detectado:", updateParams);
-          throw new Error("Parámetro undefined en UPDATE");
-        }
-
+        // Actualizar
         await connection.execute(
           `UPDATE calificaciones_modulos 
            SET calificacion = ?,
@@ -601,46 +626,53 @@ exports.registrarCalificacionModulo = async (req, res) => {
                registrado_por = ?,
                fecha_registro = NOW()
            WHERE id = ?`,
-          updateParams
+          [
+            calificacionConvertida,
+            calificacionSobre100,
+            completado,
+            registradoPor,
+            existing.id,
+          ]
         );
       } else {
-        // ✅ Insertar - TODOS los valores deben estar definidos
-        const insertParams = [
-          inscripcion_id,
-          resultado_aprendizaje_id,
-          oportunidad,
-          calificacionConvertida,
-          calificacionSobre100,
-          completado,
-          registradoPor,
-        ];
-
-        console.log("➕ INSERT con parámetros:", insertParams);
-
-        // Verificar que ningún parámetro sea undefined
-        const hasUndefined = insertParams.some((p) => p === undefined);
-        if (hasUndefined) {
-          console.error("❌ Parámetro undefined detectado:", insertParams);
-          throw new Error("Parámetro undefined en INSERT");
-        }
-
+        // Insertar
         await connection.execute(
           `INSERT INTO calificaciones_modulos 
            (inscripcion_id, resultado_aprendizaje_id, oportunidad, calificacion, calificacion_sobre_100, completado, registrado_por, fecha_registro) 
            VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-          insertParams
+          [
+            inscripcion_id,
+            resultado_aprendizaje_id,
+            oportunidad,
+            calificacionConvertida,
+            calificacionSobre100,
+            completado,
+            registradoPor,
+          ]
         );
       }
     });
 
-    console.log("✅ Calificación guardada exitosamente");
+    // ✅ REGISTRAR ACTIVIDAD
+    await ActivityLogger.logCalificacionModulo({
+      estudiante_nombre: datos.estudiante_nombre,
+      materia_nombre: datos.materia_nombre,
+      ra_nombre: ra.nombre,
+      calificacion: calificacionSobre100,
+      oportunidad: oportunidad,
+      completado: completado === 1,
+      realizado_por: req.user?.id,
+      usuario_afectado_id: datos.estudiante_id,
+      materia_id: datos.materia_id,
+      inscripcion_id: inscripcion_id,
+    });
 
     res.json({
       success: true,
       message: "Calificación registrada exitosamente",
       calificacion_ingresada: calificacionSobre100.toFixed(2),
       calificacion_convertida: calificacionConvertida.toFixed(2),
-      porcentaje_ra: porcentajeRA,
+      porcentaje_ra: ra.porcentaje,
       completado: completado === 1,
       minimo_requerido: minimoRA.toFixed(2),
     });

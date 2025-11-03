@@ -12,6 +12,7 @@ const {
   verifyRoles,
   verifyStudentAccess,
 } = require("../middleware/auth");
+const ActivityLogger = require("../utils/activityLogger.js");
 const multer = require("multer");
 const path = require("path");
 
@@ -293,5 +294,68 @@ router.post("/coins/transfer", adminController.transferCoins);
 router.post("/coins/adjust", adminController.adjustBalance);
 router.get("/coins/summary", adminController.getSummary);
 router.get("/transactions", adminController.getTransactions);
+
+// ==========================================
+// ACTIVIDADES RECIENTES
+// ==========================================
+
+/**
+ * GET /api/admin/actividades-recientes
+ * Obtener lista de actividades recientes del sistema
+ */
+router.get("/actividades-recientes", async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 20;
+
+    // Validar que el límite sea razonable
+    if (limit < 1 || limit > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "El límite debe estar entre 1 y 100",
+      });
+    }
+
+    const actividades = await ActivityLogger.getRecent(limit);
+    console.log(
+      `✅ Se encontraron ${actividades.length} actividades recientes`
+    );
+
+    res.json({
+      success: true,
+      actividades,
+      total: actividades.length,
+    });
+  } catch (error) {
+    console.error("❌ Error obteniendo actividades recientes:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener actividades recientes",
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * DELETE /api/admin/actividades-recientes/limpiar
+ * Limpiar actividades antiguas (más de 30 días)
+ */
+router.delete("/actividades-recientes/limpiar", async (req, res) => {
+  try {
+    const deleted = await ActivityLogger.cleanOldActivities();
+
+    res.json({
+      success: true,
+      message: `Se eliminaron ${deleted} actividades antiguas`,
+      deleted,
+    });
+  } catch (error) {
+    console.error("❌ Error limpiando actividades:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al limpiar actividades",
+      error: error.message,
+    });
+  }
+});
 
 module.exports = router;

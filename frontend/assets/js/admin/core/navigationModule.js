@@ -1,5 +1,5 @@
 // ==========================================
-// MÓDULO DE NAVEGACIÓN - FRONTEND
+// MÓDULO DE NAVEGACIÓN - FRONTEND (CORREGIDO)
 // ==========================================
 
 import dashboardModule from "../modules/dashboardModule.js";
@@ -10,7 +10,7 @@ import monedasModule from "../modules/monedasModule.js";
 import codesModule from "../modules/codesModule.js";
 import rankingModule from "../modules/rankingModule.js";
 import reportesModule from "../modules/reportesModule.js";
-import gradesModule from "../modules/gradesModule.js"; // ✅ IMPORTAR
+import gradesModule from "../modules/gradesModule.js";
 
 class NavigationModule {
   constructor() {
@@ -19,7 +19,7 @@ class NavigationModule {
       students: studentsModule,
       tasks: tasksModule,
       exams: examenesModule,
-      grades: gradesModule, // ✅ AGREGAR
+      grades: gradesModule,
       coins: monedasModule,
       codes: codesModule,
       ranking: rankingModule,
@@ -47,17 +47,45 @@ class NavigationModule {
     this.navigateTo("dashboard");
   }
 
+  // ==========================================
+  // ✅ NUEVA FUNCIÓN: Obtener sección/módulo actual
+  // ==========================================
+  getCurrentSection() {
+    return this.currentModule;
+  }
+
+  // ==========================================
+  // ✅ NUEVA FUNCIÓN: Obtener nombre legible de la sección
+  // ==========================================
+  getCurrentSectionName() {
+    const moduleTextMap = {
+      dashboard: "Dashboard",
+      students: "Estudiantes",
+      tasks: "Tareas",
+      exams: "Exámenes",
+      grades: "Calificaciones",
+      coins: "Monedas",
+      codes: "Códigos de Acceso",
+      ranking: "Rankings",
+      reportes: "Reportes",
+    };
+
+    return moduleTextMap[this.currentModule] || "Dashboard";
+  }
+
   getModuleIdFromMenuItem(menuItem) {
     const menuText = menuItem
       .querySelector(".menu-text")
-      .textContent.toLowerCase();
+      ?.textContent?.toLowerCase();
+
+    if (!menuText) return null;
 
     const moduleMap = {
       dashboard: "dashboard",
       estudiantes: "students",
       tareas: "tasks",
       exámenes: "exams",
-      calificaciones: "grades", // ✅ AGREGAR
+      calificaciones: "grades",
       monedas: "coins",
       "códigos acceso": "codes",
       rankings: "ranking",
@@ -91,7 +119,7 @@ class NavigationModule {
       try {
         await module.render();
 
-        // ✅ IMPORTANTE: Reinicializar los iconos de Lucide después de renderizar
+        // Reinicializar los iconos de Lucide después de renderizar
         if (typeof lucide !== "undefined" && lucide.createIcons) {
           lucide.createIcons();
         }
@@ -134,7 +162,7 @@ class NavigationModule {
       students: "estudiantes",
       tasks: "tareas",
       exams: "exámenes",
-      grades: "calificaciones", // ✅ AGREGAR
+      grades: "calificaciones",
       coins: "monedas",
       codes: "códigos acceso",
       ranking: "rankings",
@@ -144,17 +172,38 @@ class NavigationModule {
     const searchText = moduleTextMap[moduleId];
 
     // Encontrar y activar el item correspondiente
-    const activeItem = Array.from(navItems).find((item) =>
-      item
+    const activeItem = Array.from(navItems).find((item) => {
+      const menuText = item
         .querySelector(".menu-text")
-        .textContent.toLowerCase()
-        .includes(searchText)
-    );
+        ?.textContent?.toLowerCase();
+      return menuText && menuText.includes(searchText);
+    });
 
     if (activeItem) {
       activeItem.classList.remove("text-slate-300");
       activeItem.classList.add("bg-slate-700", "text-white", "active-nav-item");
     }
+  }
+
+  // ==========================================
+  // ✅ NUEVA FUNCIÓN: Recargar módulo actual
+  // ==========================================
+  async reloadCurrentModule() {
+    const module = this.modules[this.currentModule];
+    if (module && typeof module.loadData === "function") {
+      try {
+        await module.loadData();
+      } catch (error) {
+        console.error(`Error reloading module ${this.currentModule}:`, error);
+      }
+    }
+  }
+
+  // ==========================================
+  // ✅ NUEVA FUNCIÓN: Obtener instancia del módulo actual
+  // ==========================================
+  getCurrentModule() {
+    return this.modules[this.currentModule];
   }
 }
 

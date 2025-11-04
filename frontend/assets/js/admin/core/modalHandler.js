@@ -52,10 +52,11 @@ class ModalHandler {
   }
 
   async handleNewStudent() {
-    const nombre = document.getElementById("studentName").value;
-    const email = document.getElementById("studentEmail").value;
-    const password = document.getElementById("studentPassword").value;
+    const nombre = document.getElementById("studentName")?.value?.trim();
+    const email = document.getElementById("studentEmail")?.value?.trim();
+    const password = document.getElementById("studentPassword")?.value;
 
+    // Validaciones
     if (!nombre || !email || !password) {
       uiService.showNotification(
         "Por favor completa todos los campos",
@@ -72,37 +73,113 @@ class ModalHandler {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      uiService.showNotification(
+        "Por favor ingresa un email válido",
+        NOTIFICATION_TYPES.ERROR
+      );
+      return;
+    }
+
+    // Deshabilitar el botón de submit para evitar envíos duplicados
+    const submitBtn = document.querySelector(
+      '#newStudentForm button[type="submit"]'
+    );
+    const originalBtnText = submitBtn?.textContent;
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML =
+        '<i data-lucide="loader" class="w-4 h-4 inline mr-2 animate-spin"></i> Creando...';
+      if (typeof lucide !== "undefined" && lucide.createIcons) {
+        lucide.createIcons();
+      }
+    }
+
     try {
-      const data = await apiService.createStudent({ nombre, email, password });
+      console.log("Enviando datos:", { nombre, email, password: "***" });
+
+      const data = await apiService.createStudent({
+        nombre: nombre,
+        email: email,
+        password: password,
+      });
+
+      console.log("Respuesta del servidor:", data);
 
       if (data.success) {
         uiService.showNotification(
           "✅ Estudiante creado exitosamente",
           NOTIFICATION_TYPES.SUCCESS
         );
+
+        // Cerrar modal y limpiar formulario
         uiService.closeModal("newStudentModal");
         document.getElementById("newStudentForm").reset();
 
-        // Recargar datos según la sección actual
-        const currentSection = navigationModule.getCurrentSection();
-        if (currentSection === "dashboard") {
-          await dashboardModule.loadStats();
-        } else if (currentSection === "estudiantes") {
-          const studentsModule = await import("../modules/studentsModule.js");
-          await studentsModule.default.loadData();
+        // ✅ MÉTODO ROBUSTO: Siempre recargar datos sin importar errores
+        try {
+          const currentSection = this.getCurrentSection();
+          console.log("Sección actual:", currentSection);
+
+          if (currentSection === "dashboard") {
+            await dashboardModule.loadStats();
+          } else if (currentSection === "students") {
+            try {
+              const studentsModule = await import(
+                "../modules/studentsModule.js"
+              );
+              if (studentsModule.default && studentsModule.default.loadData) {
+                await studentsModule.default.loadData();
+              }
+            } catch (moduleErr) {
+              console.warn(
+                "Error recargando módulo de estudiantes:",
+                moduleErr
+              );
+              // ✅ FALLBACK: Recargar página completa si falla
+              setTimeout(() => {
+                window.location.reload();
+              }, 1500);
+            }
+          }
+        } catch (reloadErr) {
+          console.error("Error en recarga:", reloadErr);
+          // ✅ FALLBACK: Recargar página después de 1.5 segundos
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
         }
       } else {
         uiService.showNotification(
-          "❌ " + data.message,
+          "❌ " + (data.message || "Error al crear estudiante"),
           NOTIFICATION_TYPES.ERROR
         );
       }
     } catch (error) {
       console.error("Error creando estudiante:", error);
       uiService.showNotification(
-        "❌ Error al crear estudiante",
+        "❌ Error de conexión. Verifica si el estudiante fue creado.",
         NOTIFICATION_TYPES.ERROR
       );
+
+      // ✅ IMPORTANTE: Informar al usuario que revise
+      setTimeout(() => {
+        uiService.showNotification(
+          "🔄 Recargando para verificar cambios...",
+          NOTIFICATION_TYPES.INFO
+        );
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }, 3000);
+    } finally {
+      // Rehabilitar botón
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText || "Agregar Estudiante";
+      }
     }
   }
 

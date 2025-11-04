@@ -15,21 +15,33 @@ class AuthService {
 
   initSessionMonitoring() {
     // Eventos para detectar actividad del usuario
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-    events.forEach(event => {
+    const events = [
+      "mousedown",
+      "mousemove",
+      "keypress",
+      "scroll",
+      "touchstart",
+    ];
+    events.forEach((event) => {
       document.addEventListener(event, this.boundActivityHandler);
     });
-    
+
     // Iniciar monitoreo de sesión
     this.resetSessionTimer();
   }
 
   stopSessionMonitoring() {
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-    events.forEach(event => {
+    const events = [
+      "mousedown",
+      "mousemove",
+      "keypress",
+      "scroll",
+      "touchstart",
+    ];
+    events.forEach((event) => {
       document.removeEventListener(event, this.boundActivityHandler);
     });
-    
+
     if (this.timeoutId) {
       clearTimeout(this.timeoutId);
       this.timeoutId = null;
@@ -41,7 +53,10 @@ class AuthService {
   }
 
   handleUserActivity() {
-    localStorage.setItem(CONFIG.STORAGE_KEYS.LAST_ACTIVITY, Date.now().toString());
+    localStorage.setItem(
+      CONFIG.STORAGE_KEYS.LAST_ACTIVITY,
+      Date.now().toString()
+    );
     this.resetSessionTimer();
   }
 
@@ -66,30 +81,81 @@ class AuthService {
 
   showSessionWarning() {
     const remainingTime = Math.round(CONFIG.TIMEOUT_WARNING / 1000 / 60);
-    const warning = document.createElement('div');
-    warning.id = 'session-warning';
+
+    // Crear el modal
+    const warning = document.createElement("div");
+    warning.id = "session-warning";
     warning.innerHTML = `
-      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
+      <div class="bg-white rounded-lg p-6 max-w-sm mx-4 shadow-2xl animate-slideUp">
+        <div class="flex items-center mb-4">
+          <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mr-4">
+            <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900">
             ¡Advertencia de Sesión!
           </h3>
-          <p class="text-gray-600 mb-6">
-            Su sesión expirará en ${remainingTime} minuto(s). ¿Desea mantener la sesión activa?
-          </p>
-          <div class="flex justify-end space-x-4">
-            <button onclick="authService.handleSessionTimeout()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
-              Cerrar Sesión
-            </button>
-            <button onclick="authService.resetSessionTimer(); document.getElementById('session-warning').remove();" 
-                    class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-              Mantener Sesión
-            </button>
-          </div>
+        </div>
+        
+        <p class="text-gray-600 mb-6">
+          Su sesión expirará en <strong class="text-amber-600">${remainingTime} minuto(s)</strong>. 
+          ¿Desea mantener la sesión activa?
+        </p>
+        
+        <div class="flex justify-end space-x-3">
+          <button 
+            id="logoutBtn" 
+            class="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            Cerrar Sesión
+          </button>
+          <button 
+            id="keepSessionBtn" 
+            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-md hover:shadow-lg"
+          >
+            Mantener Sesión
+          </button>
         </div>
       </div>
-    `;
+    </div>
+  `;
+
+    // Agregar al DOM
     document.body.appendChild(warning);
+
+    // ✅ Agregar event listeners (en lugar de onclick inline)
+    const logoutBtn = document.getElementById("logoutBtn");
+    const keepSessionBtn = document.getElementById("keepSessionBtn");
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        this.handleSessionTimeout();
+      });
+    }
+
+    if (keepSessionBtn) {
+      keepSessionBtn.addEventListener("click", () => {
+        this.resetSessionTimer();
+        this.removeSessionWarning();
+      });
+    }
+
+    console.log("⚠️ Advertencia de sesión mostrada");
+  }
+
+  // ✅ Nuevo método para remover el warning de forma limpia
+  removeSessionWarning() {
+    const warning = document.getElementById("session-warning");
+    if (warning) {
+      // Animación de salida
+      warning.style.animation = "fadeOut 0.2s ease-out";
+      setTimeout(() => {
+        warning.remove();
+        console.log("✅ Advertencia de sesión cerrada");
+      }, 200);
+    }
   }
 
   handleSessionTimeout() {
